@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDateShort } from '../lib/utils';
+
+export interface Props {
+  post: CollectionEntry<"posts">;
+  showCover?: boolean;
+}
+
+const { post, showCover = true } = Astro.props;
+const { data } = post;
+const hasCover = !!data.coverImage;
+---
+
+<a
+  href={"/blog/" + post.id}
+  class="group block rounded-default bg-secondary/40 shadow-soft border border-primary/5 transition-all duration-300 hover:shadow-soft-hover hover:-translate-y-1 overflow-hidden"
+>
+  {showCover && (
+    <div class="relative h-44 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/30 to-accent-pink/20">
+      {hasCover ? (
+        <img
+          src={data.coverImage}
+          alt={data.title}
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+      ) : (
+        <div class="flex h-full items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-primary/20"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      )}
+      <span
+        class="absolute top-3 left-3 inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide shadow-soft bg-white/70 backdrop-blur-sm"
+        class:list={{
+          "text-accent-green": data.category === "前端",
+          "text-primary": data.category === "设计系统",
+          "text-accent-pink": data.category === "工程化",
+          "text-amber-700": data.category === "随笔",
+          "text-indigo-600": data.category === "开源",
+        }}
+      >
+        {data.category}
+      </span>
+    </div>
+  )}
+
+  <div class="p-5">
+    <h3 class="text-base font-semibold text-text-main group-hover:text-primary transition-colors duration-250 leading-snug line-clamp-2">
+      {data.title}
+    </h3>
+
+    <p class="mt-2 text-sm text-text-sub leading-relaxed line-clamp-2">
+      {data.description}
+    </p>
+
+    <div class="mt-4 flex items-center justify-between text-xs text-text-sub/50">
+      <time>{formatDateShort(data.pubDate)}</time>
+      {data.tags && data.tags.length > 0 && (
+        <span class="truncate max-w-[60%] text-right">{data.tags.slice(0, 2).join(", ")}{data.tags.length > 2 ? "..." : ""}</span>
+      )}
+    </div>
+  </div>
+</a>

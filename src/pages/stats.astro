@@ -1,0 +1,210 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { getCategories, getAllTags, formatDateShort } from "../lib/utils";
+
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime(),
+);
+const categories = getCategories(allPosts);
+const tags = getAllTags(allPosts);
+const totalTags = tags.reduce((sum, t) => sum + t.count, 0);
+const oldest = sortedPosts[sortedPosts.length - 1];
+const newest = sortedPosts[0];
+
+// ??????
+const monthlyMap = new Map<string, number>();
+for (const post of sortedPosts) {
+  const d = new Date(post.data.pubDate);
+  const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  monthlyMap.set(key, (monthlyMap.get(key) ?? 0) + 1);
+}
+const monthlyData = Array.from(monthlyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+const maxMonthly = Math.max(...monthlyData.map(([, c]) => c));
+
+// ????
+const SITE_START = oldest ? new Date(oldest.data.pubDate) : new Date();
+const RUNNING_DAYS = Math.floor((Date.now() - SITE_START.getTime()) / (1000 * 60 * 60 * 24));
+const RUNNING_YEARS = Math.floor(RUNNING_DAYS / 365);
+const RUNNING_REMAINDER = RUNNING_DAYS % 365;
+
+// ????
+const catColors: Record<string, string> = {
+  "前端": "var(--color-accent-green)",
+  "设计系统": "var(--color-primary)",
+  "工程化": "var(--color-accent-pink)",
+  "随笔": "#d97706",
+  "开源": "#6366f1",
+};
+const maxCatCount = Math.max(...categories.map((c) => c.count), 1);
+---
+
+<Layout title="统计" description="博客数据统计">
+  <div class="mx-auto max-w-5xl px-6 pt-28 pb-24">
+    <div class="mb-12">
+      <h1 class="text-3xl font-bold text-text-main tracking-tight">统计</h1>
+      <p class="mt-2 text-text-sub">博客运营数据一览</p>
+    </div>
+
+    <!-- 概览卡片栏 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+      <div class="rounded-default bg-secondary/40 p-6 shadow-soft border border-primary/5 text-center">
+        <p class="text-3xl font-bold text-primary">{allPosts.length}</p>
+        <p class="text-xs text-text-sub/60 mt-1.5">文章总数</p>
+      </div>
+      <div class="rounded-default bg-secondary/40 p-6 shadow-soft border border-primary/5 text-center">
+        <p class="text-3xl font-bold text-accent-green">{RUNNING_YEARS}年{RUNNING_REMAINDER}天</p>
+        <p class="text-xs text-text-sub/60 mt-1.5">运行天数</p>
+      </div>
+      <div class="rounded-default bg-secondary/40 p-6 shadow-soft border border-primary/5 text-center">
+        <p class="text-3xl font-bold text-accent-pink" id="visit-count">-</p>
+        <p class="text-xs text-text-sub/60 mt-1.5">总访问量</p>
+      </div>
+      <div class="rounded-default bg-secondary/40 p-6 shadow-soft border border-primary/5 text-center">
+        <p class="text-3xl font-bold text-primary">{categories.length}</p>
+        <p class="text-xs text-text-sub/60 mt-1.5">分类数</p>
+      </div>
+    </div>
+
+    <!-- 访问趋势 -->
+    <section class="rounded-default bg-secondary/40 p-8 shadow-soft border border-primary/5 mb-12">
+      <h2 class="text-lg font-semibold text-text-main mb-6 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        访问趋势
+      </h2>
+      <div id="trend-chart" class="flex items-end gap-1 h-32">
+        <!-- 由客户端动态渲染 -->
+      </div>
+      <p class="mt-4 text-xs text-text-sub/40 text-center">近 30 天每日访问量（本地浏览器记录）</p>
+    </section>
+
+    <!-- 月度发文分布图 -->
+    <section class="rounded-default bg-secondary/40 p-8 shadow-soft border border-primary/5 mb-12">
+      <h2 class="text-lg font-semibold text-text-main mb-6 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        月度发文分布
+      </h2>
+      <div class="flex items-end gap-2 h-40">
+        {monthlyData.map(([month, count]) => (
+          <div class="flex-1 flex flex-col items-center gap-1 group">
+            <span class="text-xs text-text-sub/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">{count}</span>
+            <div
+              class="w-full rounded-t-md transition-all duration-300 group-hover:opacity-80"
+              style={{
+                height: (count / maxMonthly) * 100 + "%",
+                backgroundColor: "var(--color-primary)",
+                opacity: 0.4 + (count / maxMonthly) * 0.5,
+              }}
+            ></div>
+            <span class="text-xs text-text-sub/40 mt-1 -rotate-45 origin-left whitespace-nowrap">{month.split("-")[1]}月</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 分类分布 -->
+    <section class="rounded-default bg-secondary/40 p-8 shadow-soft border border-primary/5 mb-12">
+      <h2 class="text-lg font-semibold text-text-main mb-6 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M4 21v-7M10 21V9M16 21V3M22 21v-5"/></svg>
+        文章分类统计
+      </h2>
+      <div class="space-y-4">
+        {categories.map((cat) => (
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-text-main w-16 shrink-0 font-medium">{cat.name}</span>
+            <div class="flex-1 h-7 rounded-full bg-primary/5 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: (cat.count / maxCatCount) * 100 + "%",
+                  backgroundColor: catColors[cat.name] || "var(--color-primary)",
+                  opacity: 0.6,
+                }}
+              ></div>
+            </div>
+            <span class="text-sm font-semibold text-text-main w-8 text-right">{cat.count}</span>
+            <span class="text-xs text-text-sub/40 w-10 text-right">
+              {Math.round((cat.count / allPosts.length) * 100)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 时间跨度 -->
+    <section class="rounded-default bg-secondary/40 p-8 shadow-soft border border-primary/5">
+      <h2 class="text-lg font-semibold text-text-main mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        时间跨度
+      </h2>
+      {oldest && newest && (
+        <div class="text-center py-6">
+          <p class="text-text-sub">
+            <span class="text-primary font-semibold">{formatDateShort(oldest.data.pubDate)}</span>
+            <span class="mx-3 text-text-sub/30">→</span>
+            <span class="text-primary font-semibold">{formatDateShort(newest.data.pubDate)}</span>
+          </p>
+        </div>
+      )}
+    </section>
+  </div>
+</Layout>
+
+<script>
+  // 访问记录与趋势图
+  (() => {
+    const HISTORY_KEY = "mtb_history";
+    const today = new Date().toISOString().slice(0, 10);
+
+    // 读取历史数据
+    let history = {};
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (raw) history = JSON.parse(raw);
+    } catch {}
+
+    // 更新今天访问
+    history[today] = (history[today] || 0) + 1;
+
+    // 清理 30 天以外的数据
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    for (const d in history) {
+      if (d < cutoff.toISOString().slice(0, 10)) delete history[d];
+    }
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+    // 总访问量
+    const totalVisits = Object.values(history).reduce((a, b) => a + b, 0);
+    const visitEl = document.getElementById("visit-count");
+    if (visitEl) visitEl.textContent = String(totalVisits);
+
+    // 渲染趋势图
+    const chartEl = document.getElementById("trend-chart");
+    if (!chartEl) return;
+
+    const days = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (29 - i));
+      return d.toISOString().slice(0, 10);
+    });
+
+    const values = days.map((d) => history[d] || 0);
+    const maxVal = Math.max(...values, 1);
+
+    chartEl.innerHTML = days
+      .map((d, i) => {
+        const h = (values[i] / maxVal) * 100;
+        const dayNum = d.slice(8, 10);
+        const opacity = 0.3 + (values[i] / maxVal) * 0.6;
+        return '<div class="flex-1 flex flex-col items-center gap-0.5 group relative">'
+          + '<span class="text-[10px] text-text-sub/30 opacity-0 group-hover:opacity-100 transition-opacity">' + values[i] + '</span>'
+          + '<div class="w-full rounded-sm transition-all" style="height:' + h + '%;background-color:var(--color-primary);opacity:' + opacity + '"></div>'
+          + '<span class="text-[10px] text-text-sub/30">' + dayNum + '</span>'
+          + '</div>';
+      })
+      .join("");
+  })();
+</script>

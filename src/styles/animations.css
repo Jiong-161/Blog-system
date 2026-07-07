@@ -1,0 +1,205 @@
+/* ===== Advanced Motion System ===== */
+/* Easing: slow, smooth, premium */
+:root {
+  --ease-premium: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-premium-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --anim-duration-slow: 1.4s;
+  --anim-duration-med: 0.9s;
+  --anim-duration-fast: 0.6s;
+}
+
+/* ===== Staggered reveal base ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s var(--ease-premium), transform 0.9s var(--ease-premium);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Mask reveal: horizontal sweep ===== */
+.mask-reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.2s var(--ease-premium);
+}
+.mask-reveal.is-visible {
+  clip-path: inset(0 0% 0 0);
+}
+
+/* ===== Mask reveal: vertical ===== */
+.mask-reveal-v {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1.2s var(--ease-premium);
+}
+.mask-reveal-v.is-visible {
+  clip-path: inset(0 0 0% 0);
+}
+
+/* ===== Compress + spring back ===== */
+@keyframes compressSpring {
+  0% {
+    transform: scaleX(1.4) scaleY(0.6);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  50% {
+    transform: scaleX(0.95) scaleY(1.05);
+    opacity: 0.8;
+    filter: blur(0);
+  }
+  100% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+.anim-compress-spring {
+  animation: compressSpring 1.6s var(--ease-premium) forwards;
+}
+
+/* ===== Clip reveal from center ===== */
+@keyframes clipCenter {
+  0% {
+    clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+    opacity: 0;
+  }
+  40% {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    opacity: 1;
+  }
+  100% {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    opacity: 1;
+  }
+}
+.anim-clip-center {
+  animation: clipCenter 1.8s var(--ease-premium) forwards;
+}
+
+/* ===== Slide in from right (for English headings) ===== */
+.slide-in-right {
+  transform: translateX(80px);
+  opacity: 0;
+  transition: transform 1s var(--ease-premium), opacity 0.8s var(--ease-premium);
+}
+.slide-in-right.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ===== Slide in from left with mask ===== */
+.mask-slide-left {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.4s var(--ease-premium);
+}
+.mask-slide-left.is-visible {
+  clip-path: inset(0 0% 0 0);
+}
+
+/* ===== Image reveal ===== */
+.img-reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.2s var(--ease-premium), transform 1.4s var(--ease-premium);
+}
+.img-reveal.is-visible {
+  clip-path: inset(0 0% 0 0);
+}
+
+/* ===== Image reveal with scale ===== */
+.img-zoom-reveal {
+  clip-path: inset(0 100% 0 0);
+  transform: scale(1.08);
+  transition: clip-path 1.2s var(--ease-premium), transform 1.8s var(--ease-premium);
+}
+.img-zoom-reveal.is-visible {
+  clip-path: inset(0 0% 0 0);
+  transform: scale(1);
+}
+
+/* ===== Parallax wrapper ===== */
+.parallax-wrap {
+  overflow: hidden;
+}
+.parallax-inner {
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+/* ===== Stagger children: cards enter one by one ===== */
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s var(--ease-premium-out), transform 0.7s var(--ease-premium-out);
+}
+.stagger-children.is-visible > *:nth-child(1) { transition-delay: 0ms; }
+.stagger-children.is-visible > *:nth-child(2) { transition-delay: 120ms; }
+.stagger-children.is-visible > *:nth-child(3) { transition-delay: 240ms; }
+.stagger-children.is-visible > *:nth-child(4) { transition-delay: 360ms; }
+.stagger-children.is-visible > *:nth-child(5) { transition-delay: 480ms; }
+.stagger-children.is-visible > *:nth-child(6) { transition-delay: 600ms; }
+.stagger-children.is-visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Hero spotlight overlay ===== */
+@keyframes spotlightGrow {
+  0% { opacity: 0; transform: scale(0.3); }
+  40% { opacity: 0.3; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.anim-spotlight {
+  animation: spotlightGrow 2.5s var(--ease-premium) forwards;
+}
+
+/* ===== Decorative line draw ===== */
+@keyframes lineDraw {
+  0% { transform: scaleX(0); transform-origin: left; }
+  100% { transform: scaleX(1); transform-origin: left; }
+}
+.anim-line-draw {
+  animation: lineDraw 1.2s var(--ease-premium) 0.6s both;
+}
+
+/* ===== Hero background slow zoom ===== */
+@keyframes heroZoom {
+  0% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.anim-hero-zoom {
+  animation: heroZoom 2.5s var(--ease-premium) forwards;
+}
+
+/* ===== Floating particles (very subtle) ===== */
+@keyframes floatDrift {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.15; }
+  25% { transform: translateY(-12px) translateX(4px); opacity: 0.25; }
+  50% { transform: translateY(-4px) translateX(-3px); opacity: 0.2; }
+  75% { transform: translateY(-18px) translateX(6px); opacity: 0.3; }
+}
+.anim-float-drift {
+  animation: floatDrift 8s ease-in-out infinite;
+}
+
+/* ===== Scroll-driven section intro ===== */
+.section-intro .section-en-title {
+  transform: translateX(-60px);
+  opacity: 0;
+  transition: transform 1.2s var(--ease-premium), opacity 0.8s var(--ease-premium);
+}
+.section-intro .section-cn-title {
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.8s var(--ease-premium), opacity 0.6s var(--ease-premium);
+  transition-delay: 0.3s;
+}
+.section-intro.is-visible .section-en-title {
+  transform: translateX(0);
+  opacity: 1;
+}
+.section-intro.is-visible .section-cn-title {
+  transform: translateY(0);
+  opacity: 1;
+}

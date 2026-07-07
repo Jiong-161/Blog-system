@@ -1,0 +1,300 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { formatDateShort, groupByMonth, getCategories } from "../lib/utils";
+
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime(),
+);
+const oldest = sortedPosts[sortedPosts.length - 1];
+const newest = sortedPosts[0];
+
+const yearSet = [...new Set(sortedPosts.map((p) => new Date(p.data.pubDate).getFullYear()))].sort((a, b) => b - a);
+
+interface PostItem { data: { pubDate: Date; title: string; description: string; category: string; tags?: string[] }; id: string }
+const timeline = yearSet.map((year) => {
+  const yearPosts = sortedPosts.filter((p) => new Date(p.data.pubDate).getFullYear() === year);
+  const months = groupByMonth(yearPosts as PostItem[]);
+  return { year, total: yearPosts.length, months };
+});
+
+const categories = getCategories(sortedPosts);
+const activeCategory = Astro.url.searchParams.get("category");
+const filteredPosts = activeCategory
+  ? sortedPosts.filter((p) => p.data.category === activeCategory)
+  : sortedPosts;
+
+const siteStart = oldest ? new Date(oldest.data.pubDate) : new Date();
+const runningDays = Math.floor((Date.now() - siteStart.getTime()) / (1000 * 60 * 60 * 24));
+
+const filteredTimeline = activeCategory
+  ? (() => {
+      const fYearSet = [...new Set(filteredPosts.map((p) => new Date(p.data.pubDate).getFullYear()))].sort((a, b) => b - a);
+      return fYearSet.map((year) => {
+        const yearPosts = filteredPosts.filter((p) => new Date(p.data.pubDate).getFullYear() === year);
+        const months = groupByMonth(yearPosts as PostItem[]);
+        return { year, total: yearPosts.length, months };
+      });
+    })()
+  : timeline;
+
+const catColors = {
+  "\u524d\u7aef": "bg-accent-green/15 text-accent-green",
+  "\u8bbe\u8ba1\u7cfb\u7edf": "bg-primary/15 text-primary",
+  "\u5de5\u7a0b\u5316": "bg-accent-pink/15 text-accent-pink",
+  "\u968f\u7b14": "bg-amber-200/30 text-amber-700",
+  "\u5f00\u6e90": "bg-indigo-200/30 text-indigo-600",
+};
+---
+<Layout title="归档" description="按时间轴浏览所有文章">
+  <div class="fixed inset-0 pointer-events-none z-0" style="background-image: linear-gradient(rgba(143,170,190,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(143,170,190,0.04) 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+  <div class="relative z-10 mx-auto" style="max-width: 1700px; padding-left: 2rem; padding-right: 2rem; padding-top: 7rem; padding-bottom: 6rem;">
+    <div class="lg:hidden mb-8">
+      <h1 class="text-3xl font-bold text-text-main tracking-tight reveal" data-observe>归档</h1>
+      <p class="mt-2 text-text-sub reveal" data-observe style="transition-delay: 100ms;">共 {allPosts.length} 篇文章 · {runningDays} 天运行</p>
+      <div class="flex flex-wrap gap-2 mt-6 reveal" data-observe style="transition-delay: 200ms;">
+        <a href="/archive" class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200" class:list={{ "bg-primary/10 text-primary": !activeCategory, "text-text-sub hover:text-primary hover:bg-primary/5": !!activeCategory }}>全部</a>
+        {categories.map((cat) => (
+          <a href={"/archive?category=" + encodeURIComponent(cat.name)} class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200" class:list={{ "bg-primary/10 text-primary": activeCategory === cat.name, "text-text-sub hover:text-primary hover:bg-primary/5": activeCategory !== cat.name }}>{cat.name} ({cat.count})</a>
+        ))}
+      </div>
+    </div>
+
+    <div class="flex gap-12 lg:gap-16">
+      <aside class="hidden lg:block shrink-0" style="width: 25%; max-width: 300px;">
+        <nav class="sticky space-y-6" style="top: 7rem;">
+          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-5">归档概览</h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-text-sub">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1.5 text-primary/60"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  文章总数
+                </span>
+                <span class="text-lg font-bold font-mono text-primary">{allPosts.length}</span>
+              </div>
+              <div class="h-px bg-gradient-to-r from-primary/10 to-transparent"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-text-sub">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1.5 text-accent-pink/60"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  运行天数
+                </span>
+                <span class="text-lg font-bold font-mono text-accent-pink">{runningDays}</span>
+              </div>
+              <div class="h-px bg-gradient-to-r from-primary/10 to-transparent"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-text-sub">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1.5 text-primary/60"><polyline points="4 17 9 22 20 11"/><polyline points="15 1 21 7 20 11"/></svg>
+                  首篇发文
+                </span>
+                <span class="text-sm font-mono text-text-sub">{oldest ? formatDateShort(oldest.data.pubDate) : "-"}</span>
+              </div>
+              <div class="h-px bg-gradient-to-r from-primary/10 to-transparent"></div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-text-sub">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1.5 text-primary/60"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  最新更新
+                </span>
+                <span class="text-sm font-mono text-text-sub">{newest ? formatDateShort(newest.data.pubDate) : "-"}</span>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-4">快速导航</h3>
+            <div class="space-y-1" id="year-nav">
+              {yearSet.map((y) => {
+                const count = sortedPosts.filter((p) => new Date(p.data.pubDate).getFullYear() === y).length;
+                return (
+                  <a
+                    href={"#year-" + y}
+                    data-year={y}
+                    class="year-nav-link block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 flex items-center justify-between"
+                  >
+                    <span class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-primary/20"></span>
+                      {y}
+                    </span>
+                    <span class="text-xs text-text-sub/40">{count} 篇</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-4">分类筛选</h3>
+            <div class="flex flex-wrap gap-2">
+              <a href="/archive" class="inline-block rounded-full px-3 py-1 text-xs font-medium transition-all duration-200" class:list={{ "bg-primary/15 text-primary": !activeCategory, "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": !!activeCategory }}>全部</a>
+              {categories.map((cat) => (
+                <a href={"/archive?category=" + encodeURIComponent(cat.name)} class="inline-block rounded-full px-3 py-1 text-xs font-medium transition-all duration-200" class:list={{ "bg-primary/15 text-primary": activeCategory === cat.name, "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": activeCategory !== cat.name }}>
+                  {cat.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </nav>
+      </aside>
+      <div class="flex-1 min-w-0">
+        <div class="hidden lg:block mb-12">
+          <div class="section-intro" data-observe>
+            <p class="section-en-title text-5xl md:text-7xl font-bold tracking-tight text-primary/10 select-none">ARCHIVE</p>
+            <div class="section-cn-title mt-[-0.8em]">
+              <h1 class="text-3xl font-bold text-text-main tracking-tight">归档</h1>
+              <p class="mt-2 text-text-sub">共 {filteredPosts.length} 篇文章 · {runningDays} 天运行{activeCategory ? " · 分类：" + activeCategory : ""}</p>
+            </div>
+          </div>
+        </div>
+
+        {filteredTimeline.length > 0 ? (
+          <div class="relative">
+            <div class="absolute left-[14px] top-0 bottom-0 w-px" style="border-left: 1px dashed rgba(143, 170, 190, 0.25);"></div>
+
+            {filteredTimeline.map(({ year, total, months }, yearIdx) => (
+              <section id={"year-" + year} class="mb-16 last:mb-0" data-observe>
+                <div class="year-header">
+                  <div class="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-secondary/70 border border-primary/10 shadow-soft" style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                    <span class="text-xl md:text-2xl font-semibold text-primary tracking-tight">{year}</span>
+                    <span class="text-xs font-medium text-accent-green bg-accent-green/10 px-2.5 py-0.5 rounded-full">{total} 篇</span>
+                  </div>
+                </div>
+
+                <div class="mt-8 space-y-10">
+                  {months.map(({ month, monthName, posts }) => (
+                    <div>
+                      <div class="flex items-center gap-3 mb-5 ml-[-0.75rem]">
+                        <span class="w-6 h-6 rounded-full bg-accent-green/10 flex items-center justify-center">
+                          <span class="w-2 h-2 rounded-full bg-accent-green/60"></span>
+                        </span>
+                        <span class="text-sm font-medium text-accent-green/80">{monthName} · 共 {posts.length} 篇</span>
+                        <div class="h-px flex-1 bg-gradient-to-r from-primary/10 to-transparent"></div>
+                      </div>
+
+                      <div class="space-y-2 ml-2 relative">
+                        {posts.map((post, pIdx) => (
+                          <a
+                            href={"/blog/" + post.id}
+                            class="archive-entry group relative flex items-start gap-4 py-3 px-4 -mx-2 rounded-lg transition-all duration-200"
+                            style="transition: background 0.25s, transform 0.25s;"
+                          >
+                            <div class="absolute left-[-1.1rem] top-[1.1rem] w-[10px] h-[10px] shrink-0 z-10">
+                              <div class="w-[6px] h-[6px] rounded-full bg-accent-pink/60 transition-all duration-200 group-hover:w-[8px] group-hover:h-[8px] group-hover:bg-primary" style="box-shadow: 0 0 0 3px rgba(201, 169, 166, 0.12);"></div>
+                            </div>
+
+                            <div class="shrink-0 w-10 h-10 rounded-md overflow-hidden bg-gradient-to-br from-primary/15 via-secondary/20 to-accent-pink/15 flex items-center justify-center mt-0.5">
+                              {post.data.coverImage ? (
+                                <img src={post.data.coverImage} alt="" class="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="text-primary/25"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                              )}
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-start justify-between gap-3">
+                                <span class="text-base font-medium text-text-main group-hover:text-primary transition-colors duration-200">{post.data.title}</span>
+                              </div>
+                              <div class="flex items-center gap-3 mt-1">
+                                <time class="text-xs text-text-sub/40 font-mono">{new Date(post.data.pubDate).getFullYear()}-{String(new Date(post.data.pubDate).getMonth() + 1).padStart(2, "0")}-{String(new Date(post.data.pubDate).getDate()).padStart(2, "0")}</time>
+                                <span class="inline-block rounded px-2 py-0.5 text-[11px] font-medium leading-tight" class:list={{ [catColors[post.data.category] || "bg-primary/10 text-primary"]: true }}>
+                                  {post.data.category}
+                                </span>
+                              </div>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-24 text-text-sub/50 reveal" data-observe>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-primary/20"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p>暂无归档内容</p>
+            {activeCategory && (
+              <a href="/archive" class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block">
+                查看全部文章 &#8594;
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      "use strict";
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: "0px 0px -60px 0px" });
+
+      document.querySelectorAll("[data-observe]").forEach((el) => observer.observe(el));
+
+      const yearLinks = document.querySelectorAll(".year-nav-link");
+      const yearSections = document.querySelectorAll("[id^='year-']");
+
+      const updateYearNav = () => {
+        let activeYear = null;
+        const scrollTop = window.scrollY + 220;
+
+        yearSections.forEach((section) => {
+          if (section.offsetTop <= scrollTop) {
+            activeYear = section.id.replace("year-", "");
+          }
+        });
+
+        yearLinks.forEach((link) => {
+          const year = link.getAttribute("data-year");
+          if (year === activeYear) {
+            link.classList.add("bg-primary/10", "text-primary");
+            link.classList.remove("text-text-sub", "hover:bg-primary/5", "hover:text-primary");
+            const dot = link.querySelector(".rounded-full");
+            if (dot) dot.classList.add("bg-primary");
+          } else {
+            link.classList.remove("bg-primary/10", "text-primary");
+            link.classList.add("text-text-sub", "hover:bg-primary/5", "hover:text-primary");
+            const dot = link.querySelector(".rounded-full");
+            if (dot) dot.classList.remove("bg-primary");
+          }
+        });
+      };
+
+      window.addEventListener("scroll", updateYearNav, { passive: true });
+      updateYearNav();
+
+      document.querySelectorAll(".archive-entry").forEach((entry) => {
+        entry.addEventListener("mouseenter", () => {
+          entry.style.backgroundColor = "rgba(242, 233, 220, 0.4)";
+          entry.style.transform = "translateX(4px)";
+        });
+        entry.addEventListener("mouseleave", () => {
+          entry.style.backgroundColor = "transparent";
+          entry.style.transform = "translateX(0)";
+        });
+      });
+
+      yearLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("href");
+          if (!targetId) return;
+          const target = document.querySelector(targetId);
+          if (target) {
+            const offset = 120;
+            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: "smooth" });
+          }
+        });
+      });
+    })();
+  </script>
+</Layout>

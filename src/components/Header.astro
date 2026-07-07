@@ -1,0 +1,123 @@
+---
+const navItems = [
+  { label: '首页', href: '/' },
+  { label: '博客', href: '/blog' },
+  { label: '归档', href: '/archive' },
+  { label: '关于', href: '/about' },
+  { label: '留言', href: '/guestbook' },
+  { label: '统计', href: '/stats' },
+];
+const currentPath = Astro.url.pathname;
+---
+
+<header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-400">
+  <nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <!-- Logo -->
+    <a href="/" class="text-xl font-semibold tracking-tight text-primary hover:text-accent-pink transition-colors duration-250">
+      Morandi<span class="text-text-sub font-light">Tech</span>
+    </a>
+
+    <!-- 桌面端导航 -->
+    <ul class="hidden md:flex items-center gap-1">
+      {navItems.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            class="rounded-default px-4 py-2 text-sm font-medium transition-all duration-250"
+            class:list={{
+              'text-primary bg-primary/10': currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)),
+              'text-text-sub hover:text-primary hover:bg-primary/5': !(currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href))),
+            }}
+          >
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <!-- 移动端菜单按钮 -->
+    <button id="menu-toggle" class="md:hidden p-2 text-text-sub hover:text-primary transition-colors duration-250" aria-label="菜单">
+      <svg id="menu-icon-open" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+      <svg id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- 移动端菜单面板 -->
+  <div id="mobile-menu" class="hidden md:hidden glass border-t border-primary/10 shadow-soft-lg">
+    <ul class="flex flex-col px-6 py-4 space-y-1">
+      {navItems.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            class="block rounded-default px-4 py-3 text-base font-medium transition-all duration-200"
+            class:list={{
+              'text-primary bg-primary/10': currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)),
+              'text-text-sub hover:text-primary hover:bg-primary/5': !(currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href))),
+            }}
+          >
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</header>
+
+<script>
+  const header = document.getElementById('site-header');
+  const toggle = document.getElementById('menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const openIcon = document.getElementById('menu-icon-open');
+  const closeIcon = document.getElementById('menu-icon-close');
+  let isScrolled = false;
+  let menuOpen = false;
+
+  // 滚动毛玻璃
+  const updateHeader = () => {
+    const shouldBeScrolled = window.scrollY > 80;
+    if (shouldBeScrolled !== isScrolled) {
+      isScrolled = shouldBeScrolled;
+      if (isScrolled) {
+        header.classList.add('glass', 'shadow-soft');
+      } else {
+        header.classList.remove('glass', 'shadow-soft');
+      }
+    }
+  };
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  updateHeader();
+
+  // 移动端菜单切换
+  if (toggle && mobileMenu) {
+    toggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('hidden', !menuOpen);
+      openIcon?.classList.toggle('hidden', menuOpen);
+      closeIcon?.classList.toggle('hidden', !menuOpen);
+    });
+
+    // 点击菜单项后关闭
+    mobileMenu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        menuOpen = false;
+        mobileMenu.classList.add('hidden');
+        openIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+      });
+    });
+
+    // 点击菜单外部关闭
+    document.addEventListener('click', (e) => {
+      if (menuOpen && !header?.contains(e.target as Node)) {
+        menuOpen = false;
+        mobileMenu.classList.add('hidden');
+        openIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+      }
+    });
+  }
+</script>
