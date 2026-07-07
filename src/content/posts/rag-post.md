@@ -4,7 +4,7 @@ description: "深入理解 RAG（检索增强生成）原理，用 Python + Lang
 pubDate: 2026-07-07
 category: "前端"
 tags: ["Python", "RAG", "LLM", "LangChain"]
-coverImage: "src/assets/a1.jpg"
+coverImage: "/images/uploads/a1.jpg"
 draft: false
 ---
 
