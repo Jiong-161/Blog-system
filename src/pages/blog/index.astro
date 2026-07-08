@@ -106,31 +106,17 @@ const filteredPosts = activeCategory
       <!-- 右侧文章卡片流 -->
       <div class="flex-1 min-w-0">
         {filteredPosts.length > 0 ? (
-          <>
-            <!-- 列表模式 -->
-            <div class="space-y-4 post-layout-list" data-blog-grid>
-              {filteredPosts.map((post) => <BlogCard post={post} showCover={false} />)}
-            </div>
-            <!-- 网格模式 -->
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 post-layout-grid hidden" data-blog-grid>
-              {filteredPosts.map((post) => <BlogCard post={post} showCover={true} />)}
-            </div>
-          </>
+          <div class="space-y-4 post-layout-list" data-blog-grid>
+            {filteredPosts.map((post) => <BlogCard post={post} showCover={false} />)}
+          </div>
         ) : (
-          <div class="glass-card rounded-default text-center py-24 text-text-sub/50" data-empty-state>
+          <div class="glass-card rounded-default text-center py-24 text-text-sub/50">
             <p>该分类下暂无文章</p>
             <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
               查看全部文章 &rarr;
             </button>
           </div>
         )}
-        <!-- 空状态占位（JS 动态切换用） -->
-        <div class="glass-card rounded-default text-center py-24 text-text-sub/50 hidden" data-empty-state>
-          <p>该分类下暂无文章</p>
-          <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
-            查看全部文章 &rarr;
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -146,193 +132,148 @@ const filteredPosts = activeCategory
 </style>
 
 <script>
-  (function() {
-    "use strict";
+    (function() {
+      "use strict";
 
-    if (window.__blogFilterInitialized) return;
-    window.__blogFilterInitialized = true;
+      if (window.__blogFilterInitialized) return;
+      window.__blogFilterInitialized = true;
 
-    const grids = document.querySelectorAll("[data-blog-grid]");
-    if (!grids.length) return;
+      const grids = document.querySelectorAll("[data-blog-grid]");
+      if (!grids.length) return;
 
-    const cards = document.querySelectorAll(".blog-card[data-category]");
-    const chips = document.querySelectorAll("[data-category-chip]");
-    const clearBtns = document.querySelectorAll("[data-category-clear]");
-    const headingEl = document.querySelector("[data-category-heading]");
-    const emptyStates = document.querySelectorAll("[data-empty-state]");
+      const cards = document.querySelectorAll(".blog-card[data-category]");
+      const chips = document.querySelectorAll("[data-category-chip]");
+      const clearBtns = document.querySelectorAll("[data-category-clear]");
+      const headingEl = document.querySelector("[data-category-heading]");
+      const emptyStates = document.querySelectorAll("[data-empty-state]");
 
-    // --- State ---
-    function getCategoryFromURL() {
-      return new URLSearchParams(window.location.search).get("category") || null;
-    }
-    let activeCategory = getCategoryFromURL();
-
-    // --- Core filter function ---
-    function applyFilter(category, updateURL) {
-      if (updateURL === undefined) updateURL = true;
-      activeCategory = category;
-
-      // 1. Update URL via pushState
-      if (updateURL) {
-        var url = new URL(window.location);
-        if (category) {
-          url.searchParams.set("category", category);
-        } else {
-          url.searchParams.delete("category");
-        }
-        history.pushState({ category: category }, "", url);
+      // --- State ---
+      function getCategoryFromURL() {
+        return new URLSearchParams(window.location.search).get("category") || null;
       }
+      let activeCategory = getCategoryFromURL();
 
-      // 2. Update chip active states (via data-active-class)
-      chips.forEach(function(chip) {
-        var cat = chip.getAttribute("data-category-chip");
-        var activeClass = chip.getAttribute("data-active-class") || "";
-        if (cat === category) {
-          chip.classList.add("font-semibold");
-          if (activeClass) {
-            activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.add(c); });
+      // --- Core filter function ---
+      function applyFilter(category, updateURL) {
+        if (updateURL === undefined) updateURL = true;
+        activeCategory = category;
+
+        // 1. Update URL via pushState
+        if (updateURL) {
+          var url = new URL(window.location);
+          if (category) {
+            url.searchParams.set("category", category);
+          } else {
+            url.searchParams.delete("category");
           }
-        } else {
-          chip.classList.remove("font-semibold");
-          if (activeClass) {
-            activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.remove(c); });
+          history.pushState({ category: category }, "", url);
+        }
+
+        // 2. Update chip active states (via data-active-class)
+        chips.forEach(function(chip) {
+          var cat = chip.getAttribute("data-category-chip");
+          var activeClass = chip.getAttribute("data-active-class") || "";
+          if (cat === category) {
+            chip.classList.add("font-semibold");
+            if (activeClass) {
+              activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.add(c); });
+            }
+          } else {
+            chip.classList.remove("font-semibold");
+            if (activeClass) {
+              activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.remove(c); });
+            }
           }
-        }
-      });
-
-      // 3. Update clear buttons
-      clearBtns.forEach(function(btn) {
-        if (!category) {
-          btn.classList.add("bg-primary/10", "text-primary");
-          btn.classList.remove("bg-primary/5", "text-text-sub");
-        } else {
-          btn.classList.remove("bg-primary/10", "text-primary");
-          btn.classList.add("bg-primary/5", "text-text-sub");
-        }
-      });
-
-      // 4. Filter cards with staggered animation
-      var visibleCount = 0;
-      cards.forEach(function(card, index) {
-        var cardCat = card.getAttribute("data-category");
-        if (!category || cardCat === category) {
-          card.classList.remove("hidden");
-          visibleCount++;
-          // Re-trigger floatUp animation
-          card.style.animation = "none";
-          card.offsetHeight; // force reflow
-          card.style.animation = "floatUp 0.4s ease-out " + (visibleCount - 1) * 60 + "ms both";
-        } else {
-          card.classList.add("hidden");
-          card.style.animation = "none";
-        }
-      });
-
-      // 5. Update heading text
-      if (headingEl) {
-        headingEl.innerHTML = category
-          ? "「" + category + "」分类下共 <strong>" + visibleCount + "</strong> 篇文章"
-          : "共 <strong>" + visibleCount + "</strong> 篇文章";
-      }
-
-      // 6. Toggle empty state
-      var showEmpty = visibleCount === 0;
-      grids.forEach(function(g) {
-        g.classList.toggle("hidden", showEmpty);
-      });
-      emptyStates.forEach(function(el) {
-        el.classList.toggle("hidden", !showEmpty);
-        if (showEmpty) {
-          el.classList.remove("hidden");
-        }
-      });
-      // Ensure only one empty state is visible at a time
-      if (showEmpty && emptyStates.length > 1) {
-        emptyStates[0].classList.remove("hidden");
-        for (var i = 1; i < emptyStates.length; i++) {
-          emptyStates[i].classList.add("hidden");
-        }
-      }
-    }
-
-    // --- Event: chip clicks ---
-    chips.forEach(function(chip) {
-      chip.addEventListener("click", function() {
-        var cat = chip.getAttribute("data-category-chip");
-        applyFilter(cat);
-      });
-    });
-
-    // --- Event: clear button clicks ---
-    clearBtns.forEach(function(btn) {
-      btn.addEventListener("click", function() { applyFilter(null); });
-    });
-
-    // --- Event: popstate (back/forward) ---
-    window.addEventListener("popstate", function() {
-      var cat = getCategoryFromURL();
-      applyFilter(cat, false);
-    });
-
-    // --- Event: BlogCard category badge clicks ---
-    function bindBadgeClicks() {
-      document.querySelectorAll("[data-category-badge]").forEach(function(badge) {
-        if (badge.__bound) return;
-        badge.__bound = true;
-        badge.addEventListener("click", function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var cat = badge.getAttribute("data-category-badge");
-          if (cat) applyFilter(cat);
         });
-        badge.addEventListener("keydown", function(e) {
-          if (e.key === "Enter" || e.key === " ") {
+
+        // 3. Update clear buttons
+        clearBtns.forEach(function(btn) {
+          if (!category) {
+            btn.classList.add("bg-primary/10", "text-primary");
+            btn.classList.remove("bg-primary/5", "text-text-sub");
+          } else {
+            btn.classList.remove("bg-primary/10", "text-primary");
+            btn.classList.add("bg-primary/5", "text-text-sub");
+          }
+        });
+
+        // 4. Filter cards with staggered animation
+        var visibleCount = 0;
+        cards.forEach(function(card, index) {
+          var cardCat = card.getAttribute("data-category");
+          if (!category || cardCat === category) {
+            card.classList.remove("hidden");
+            visibleCount++;
+            // Re-trigger floatUp animation
+            card.style.animation = "none";
+            card.offsetHeight; // force reflow
+            card.style.animation = "floatUp 0.4s ease-out " + (visibleCount - 1) * 60 + "ms both";
+          } else {
+            card.classList.add("hidden");
+            card.style.animation = "none";
+          }
+        });
+
+        // 5. Update heading text
+        if (headingEl) {
+          headingEl.innerHTML = category
+            ? "「" + category + "」分类下共 <strong>" + visibleCount + "</strong> 篇文章"
+            : "共 <strong>" + visibleCount + "</strong> 篇文章";
+        }
+
+        // 6. Toggle empty state
+        var showEmpty = visibleCount === 0;
+        grids.forEach(function(g) {
+          g.classList.toggle("hidden", showEmpty);
+        });
+        emptyStates.forEach(function(el) {
+          el.classList.toggle("hidden", !showEmpty);
+        });
+      }
+
+      // --- Event: chip clicks ---
+      chips.forEach(function(chip) {
+        chip.addEventListener("click", function() {
+          var cat = chip.getAttribute("data-category-chip");
+          applyFilter(cat);
+        });
+      });
+
+      // --- Event: clear button clicks ---
+      clearBtns.forEach(function(btn) {
+        btn.addEventListener("click", function() { applyFilter(null); });
+      });
+
+      // --- Event: popstate (back/forward) ---
+      window.addEventListener("popstate", function() {
+        var cat = getCategoryFromURL();
+        applyFilter(cat, false);
+      });
+
+      // --- Event: BlogCard category badge clicks ---
+      function bindBadgeClicks() {
+        document.querySelectorAll("[data-category-badge]").forEach(function(badge) {
+          if (badge.__bound) return;
+          badge.__bound = true;
+          badge.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
             var cat = badge.getAttribute("data-category-badge");
             if (cat) applyFilter(cat);
-          }
+          });
+          badge.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              var cat = badge.getAttribute("data-category-badge");
+              if (cat) applyFilter(cat);
+            }
+          });
         });
-      });
-    }
-    bindBadgeClicks();
-
-    // Re-bind badges after View Transition navigations
-    document.addEventListener("astro:after-swap", bindBadgeClicks);
-
-    // ===== 文章布局切换 =====
-    const listLayout = document.querySelector(".post-layout-list");
-    const gridLayout = document.querySelector(".post-layout-grid");
-
-    function applyLayout(layout) {
-      if (!listLayout || !gridLayout) return;
-      if (layout === "grid") {
-        listLayout.classList.add("hidden");
-        gridLayout.classList.remove("hidden");
-      } else {
-        listLayout.classList.remove("hidden");
-        gridLayout.classList.add("hidden");
       }
-    }
+      bindBadgeClicks();
 
-    // 初始读取设置
-    try {
-      const saved = JSON.parse(localStorage.getItem("blog-settings") || "{}");
-      applyLayout(saved.postLayout || "list");
-    } catch (e) {
-      applyLayout("list");
-    }
-
-    // 监听设置变化
-    document.addEventListener("setting-change", function(e) {
-      if (e.detail.key === "postLayout") return; // layout 有单独事件
-    });
-
-    // 监听 html 属性变化（设置面板会设置 data-post-layout）
-    const observer = new MutationObserver(function() {
-      const layout = document.documentElement.getAttribute("data-post-layout");
-      if (layout) applyLayout(layout);
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-post-layout"] });
-  })();
-</script>
+      // Re-bind badges after View Transition navigations
+      document.addEventListener("astro:after-swap", bindBadgeClicks);
+    })();
+  </script>
