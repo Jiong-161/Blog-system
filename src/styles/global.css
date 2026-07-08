@@ -1,15 +1,17 @@
 ﻿@import "tailwindcss";
 
-/* ===== 莫兰迪设计系统 - Tailwind v4 @theme ===== */
+/* ===== 磨砂玻璃莫兰迪设计系统 - Tailwind v4 @theme ===== */
 @theme {
-  /* 色板 */
-  --color-primary: #8FAABE;
-  --color-secondary: #F7F6F3;
+  /* 色板 - 冷灰调莫兰迪 */
+  --color-primary: #8AA1B1;
+  --color-secondary: #F5F2ED;
   --color-accent-green: #A8B5A0;
   --color-accent-pink: #C9A9A6;
-  --color-bg-main: #FFFFFF;
-  --color-text-main: #4A4A4A;
-  --color-text-sub: #7A7A7A;
+  --color-bg-base: #E8E4DE;
+  --color-bg-main: #F5F2ED;
+  --color-text-main: #3D3A36;
+  --color-text-sub: #7A756E;
+  --color-glass-border: rgba(255, 255, 255, 0.35);
 
   /* 字体 */
   --font-sans: 'Inter', 'PingFang SC', 'Noto Sans SC', sans-serif;
@@ -17,18 +19,21 @@
 
   /* 全局圆角 */
   --radius-default: 12px;
+  --radius-lg: 16px;
 
-  /* 极其柔和的大扩散阴影 */
-  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.04);
-  --shadow-soft-md: 0 8px 32px rgba(0, 0, 0, 0.05);
-  --shadow-soft-lg: 0 16px 48px rgba(0, 0, 0, 0.06);
-  --shadow-soft-hover: 0 20px 56px rgba(0, 0, 0, 0.10);
+  /* 柔和大扩散阴影 */
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.03);
+  --shadow-soft-md: 0 8px 32px rgba(0, 0, 0, 0.04);
+  --shadow-soft-lg: 0 16px 48px rgba(0, 0, 0, 0.05);
+  --shadow-glass: 0 8px 32px rgba(60, 55, 50, 0.06);
+  --shadow-glass-hover: 0 12px 40px rgba(60, 55, 50, 0.08);
 
   /* 动画 keyframes */
   --animate-fade-in: fadeIn 0.6s ease-out;
   --animate-float-up: floatUp 0.5s ease-out;
   --animate-float-up-sm: floatUp 0.4s ease-out;
   --animate-bounce-soft: bounceSoft 2s ease-in-out infinite;
+  --animate-glow-pulse: glowPulse 8s ease-in-out infinite;
 }
 
 @keyframes fadeIn {
@@ -48,28 +53,98 @@
 
 /* ===== 基础重置 ===== */
 *, *::before, *::after {
-  border-color: rgba(143, 170, 190, 0.15);
+  border-color: rgba(138, 161, 177, 0.12);
 }
 
 html {
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: rgba(143, 170, 190, 0.3) transparent;
+  scrollbar-color: rgba(138, 161, 177, 0.25) transparent;
 }
 
 body {
-  background-color: var(--color-bg-main);
+  background: var(--color-bg-base);
   color: var(--color-text-main);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* ===== 毛玻璃通用工具 ===== */
+/* ===== 背景氛围光晕 ===== */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+  will-change: opacity, transform;
+}
+
+body::before {
+  width: 500px;
+  height: 500px;
+  background: rgba(138, 161, 177, 0.25);
+  top: -150px;
+  right: -100px;
+  animation: glowPulse 8s ease-in-out infinite;
+}
+
+body::after {
+  width: 400px;
+  height: 400px;
+  background: rgba(168, 181, 160, 0.2);
+  bottom: -100px;
+  left: -100px;
+  animation: glowPulse 10s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
+
+/* 确保内容在光晕之上 */
+main, header, footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== 磨砂玻璃通用工具 ===== */
 .glass {
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 32px rgba(60, 55, 50, 0.06);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 24px rgba(60, 55, 50, 0.04);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 12px 40px rgba(60, 55, 50, 0.07);
+  transform: translateY(-2px);
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
 }
 
 /* ===== View Transitions - 淡入淡出 300ms ===== */

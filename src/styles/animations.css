@@ -8,11 +8,20 @@
   --anim-duration-fast: 0.6s;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ===== Staggered reveal base ===== */
 .reveal {
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 0.9s var(--ease-premium), transform 0.9s var(--ease-premium);
+  will-change: opacity, transform;
 }
 .reveal.is-visible {
   opacity: 1;
@@ -57,6 +66,7 @@
 }
 .anim-compress-spring {
   animation: compressSpring 1.6s var(--ease-premium) forwards;
+  will-change: transform, opacity;
 }
 
 /* ===== Clip reveal from center ===== */
@@ -83,6 +93,7 @@
   transform: translateX(80px);
   opacity: 0;
   transition: transform 1s var(--ease-premium), opacity 0.8s var(--ease-premium);
+  will-change: transform, opacity;
 }
 .slide-in-right.is-visible {
   transform: translateX(0);
@@ -112,6 +123,7 @@
   clip-path: inset(0 100% 0 0);
   transform: scale(1.08);
   transition: clip-path 1.2s var(--ease-premium), transform 1.8s var(--ease-premium);
+  will-change: transform;
 }
 .img-zoom-reveal.is-visible {
   clip-path: inset(0 0% 0 0);
@@ -132,6 +144,7 @@
   opacity: 0;
   transform: translateY(30px);
   transition: opacity 0.7s var(--ease-premium-out), transform 0.7s var(--ease-premium-out);
+  will-change: opacity, transform;
 }
 .stagger-children.is-visible > *:nth-child(1) { transition-delay: 0ms; }
 .stagger-children.is-visible > *:nth-child(2) { transition-delay: 120ms; }
@@ -152,6 +165,7 @@
 }
 .anim-spotlight {
   animation: spotlightGrow 2.5s var(--ease-premium) forwards;
+  will-change: transform, opacity;
 }
 
 /* ===== Decorative line draw ===== */
@@ -161,6 +175,7 @@
 }
 .anim-line-draw {
   animation: lineDraw 1.2s var(--ease-premium) 0.6s both;
+  will-change: transform;
 }
 
 /* ===== Hero background slow zoom ===== */
@@ -170,6 +185,7 @@
 }
 .anim-hero-zoom {
   animation: heroZoom 2.5s var(--ease-premium) forwards;
+  will-change: transform;
 }
 
 /* ===== Floating particles (very subtle) ===== */
@@ -181,6 +197,7 @@
 }
 .anim-float-drift {
   animation: floatDrift 8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 /* ===== Scroll-driven section intro ===== */
@@ -188,12 +205,14 @@
   transform: translateX(-60px);
   opacity: 0;
   transition: transform 1.2s var(--ease-premium), opacity 0.8s var(--ease-premium);
+  will-change: transform, opacity;
 }
 .section-intro .section-cn-title {
   transform: translateY(20px);
   opacity: 0;
   transition: transform 0.8s var(--ease-premium), opacity 0.6s var(--ease-premium);
   transition-delay: 0.3s;
+  will-change: transform, opacity;
 }
 .section-intro.is-visible .section-en-title {
   transform: translateX(0);

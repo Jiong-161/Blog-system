@@ -1,17 +1,29 @@
-﻿<footer class="border-t border-primary/10 bg-secondary/20 mt-32">
+﻿<footer class="mt-32 glass border-t border-white/20">
   <div class="mx-auto max-w-6xl px-6 py-12">
-    <div class="flex flex-col items-center gap-4 text-center">
-      <!-- 站点名 -->
-      <a href="/" class="text-lg font-semibold text-primary tracking-tight">
-        Morandi Tech Blog
-      </a>
+    <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+      <!-- 左侧品牌信息 -->
+      <div class="text-center md:text-left">
+        <a href="/" class="text-lg font-semibold text-text-main tracking-tight hover:text-primary transition-colors duration-250">
+          Morandi Tech Blog
+        </a>
+        <p class="mt-2 text-sm text-text-sub leading-relaxed max-w-md">
+          在代码与美学之间寻找平衡。
+        </p>
+      </div>
 
-      <!-- 社交/引用 -->
-      <p class="text-sm text-text-sub leading-relaxed max-w-md">
-        在代码与美学之间寻找平衡。
-      </p>
+      <!-- 右侧友情链接 -->
+      <div class="text-center md:text-right">
+        <h4 class="text-sm font-medium text-text-main mb-3">友情链接</h4>
+        <div class="flex flex-wrap gap-3 justify-center md:justify-end">
+          <a href="https://docs.astro.build" target="_blank" rel="noopener noreferrer" class="text-xs text-text-sub hover:text-primary transition-colors duration-200">Astro Docs</a>
+          <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" class="text-xs text-text-sub hover:text-primary transition-colors duration-200">Tailwind CSS</a>
+          <a href="https://github.com/Jiong-161" target="_blank" rel="noopener noreferrer" class="text-xs text-text-sub hover:text-primary transition-colors duration-200">GitHub</a>
+        </div>
+      </div>
+    </div>
 
-      <!-- 版权 -->
+    <!-- 底部版权 -->
+    <div class="mt-8 pt-6 border-t border-white/15 text-center">
       <p class="text-xs text-text-sub/60">
         &copy; {new Date().getFullYear()} Morandi Tech Blog. Built with Astro.
       </p>

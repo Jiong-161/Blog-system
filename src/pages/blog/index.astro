@@ -20,8 +20,8 @@ const filteredPosts = activeCategory
 <Layout title="博客" description="Morandi Tech Blog 的所有文章">
   <div class="mx-auto max-w-6xl px-6 pt-28 pb-24">
     <!-- 页头 -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-text-main tracking-tight">博客</h1>
+    <div class="mb-10">
+      <h1 class="text-3xl font-semibold text-text-main tracking-tight">博客</h1>
       <p class="mt-2 text-text-sub" data-category-heading>
         {activeCategory ? (
           <>"「{activeCategory}」分类下共 <strong>{filteredPosts.length}</strong> 篇文章</>
@@ -36,10 +36,10 @@ const filteredPosts = activeCategory
       <div class="flex gap-2 whitespace-nowrap pb-2">
         <button
           data-category-clear
-          class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer"
+          class="inline-block rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer glass-card"
           class:list={{
-            "bg-primary/15 text-primary font-semibold": !activeCategory,
-            "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": activeCategory,
+            "text-primary": !activeCategory,
+            "text-text-sub hover:text-text-main": activeCategory,
           }}
         >
           全部
@@ -51,10 +51,10 @@ const filteredPosts = activeCategory
             <button
               data-category-chip={cat.name}
               data-active-class={style}
-              class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer"
+              class="inline-block rounded-lg px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer glass-card"
               class:list={{
                 [style + " font-semibold"]: isActive,
-                "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": !isActive,
+                "text-text-sub hover:text-text-main": !isActive,
               }}
             >
               {cat.name}
@@ -66,48 +66,58 @@ const filteredPosts = activeCategory
     </div>
 
     <div class="flex gap-8">
-      <!-- 左侧分类栏（桌面） -->
+      <!-- 左侧分类栏（桌面）- 玻璃侧边栏 -->
       <aside class="hidden lg:block w-56 shrink-0">
-        <nav class="sticky top-28 space-y-1">
-          <button
-            data-category-clear
-            class="block w-full text-left rounded-default px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer"
-            class:list={{
-              "bg-primary/10 text-primary": !activeCategory,
-              "text-text-sub hover:text-primary hover:bg-primary/5": activeCategory,
-            }}
-          >
-            全部文章
-          </button>
-          {categories.map((cat) => {
-            const style = getCategoryClasses(cat.name);
-            const isActive = activeCategory === cat.name;
-            return (
-              <button
-                data-category-chip={cat.name}
-                data-active-class={style}
-                class="block w-full text-left rounded-default px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center justify-between cursor-pointer"
-                class:list={{
-                  [style]: isActive,
-                  "text-text-sub hover:bg-primary/5 hover:text-primary": !isActive,
-                }}
-              >
-                <span>{cat.name}</span>
-                <span class="text-xs opacity-50">{cat.count}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <div class="glass-card rounded-default p-4 sticky top-28">
+          <h3 class="text-sm font-medium text-text-main mb-3 px-2">分类导航</h3>
+          <nav class="space-y-1">
+            <button
+              data-category-clear
+              class="block w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 cursor-pointer"
+              class:list={{
+                "bg-white/50 text-primary": !activeCategory,
+                "text-text-sub hover:text-text-main hover:bg-white/30": activeCategory,
+              }}
+            >
+              全部文章
+            </button>
+            {categories.map((cat) => {
+              const style = getCategoryClasses(cat.name);
+              const isActive = activeCategory === cat.name;
+              return (
+                <button
+                  data-category-chip={cat.name}
+                  data-active-class={style}
+                  class="block w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 flex items-center justify-between cursor-pointer"
+                  class:list={{
+                    [style + " bg-white/50"]: isActive,
+                    "text-text-sub hover:text-text-main hover:bg-white/30": !isActive,
+                  }}
+                >
+                  <span>{cat.name}</span>
+                  <span class="text-xs opacity-50">{cat.count}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </aside>
 
       <!-- 右侧文章卡片流 -->
       <div class="flex-1 min-w-0">
         {filteredPosts.length > 0 ? (
-          <div class="grid grid-cols-1 gap-5 md:grid-cols-2" data-blog-grid>
-            {filteredPosts.map((post) => <BlogCard post={post} />)}
-          </div>
+          <>
+            <!-- 列表模式 -->
+            <div class="space-y-4 post-layout-list" data-blog-grid>
+              {filteredPosts.map((post) => <BlogCard post={post} showCover={false} />)}
+            </div>
+            <!-- 网格模式 -->
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 post-layout-grid hidden" data-blog-grid>
+              {filteredPosts.map((post) => <BlogCard post={post} showCover={true} />)}
+            </div>
+          </>
         ) : (
-          <div class="text-center py-24 text-text-sub/50" data-empty-state>
+          <div class="glass-card rounded-default text-center py-24 text-text-sub/50" data-empty-state>
             <p>该分类下暂无文章</p>
             <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
               查看全部文章 &rarr;
@@ -115,7 +125,7 @@ const filteredPosts = activeCategory
           </div>
         )}
         <!-- 空状态占位（JS 动态切换用） -->
-        <div class="text-center py-24 text-text-sub/50 hidden" data-empty-state>
+        <div class="glass-card rounded-default text-center py-24 text-text-sub/50 hidden" data-empty-state>
           <p>该分类下暂无文章</p>
           <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
             查看全部文章 &rarr;
@@ -142,10 +152,10 @@ const filteredPosts = activeCategory
     if (window.__blogFilterInitialized) return;
     window.__blogFilterInitialized = true;
 
-    const grid = document.querySelector("[data-blog-grid]");
-    if (!grid) return;
+    const grids = document.querySelectorAll("[data-blog-grid]");
+    if (!grids.length) return;
 
-    const cards = grid.querySelectorAll(".blog-card[data-category]");
+    const cards = document.querySelectorAll(".blog-card[data-category]");
     const chips = document.querySelectorAll("[data-category-chip]");
     const clearBtns = document.querySelectorAll("[data-category-clear]");
     const headingEl = document.querySelector("[data-category-heading]");
@@ -227,9 +237,9 @@ const filteredPosts = activeCategory
 
       // 6. Toggle empty state
       var showEmpty = visibleCount === 0;
-      if (grid) {
-        grid.classList.toggle("hidden", showEmpty);
-      }
+      grids.forEach(function(g) {
+        g.classList.toggle("hidden", showEmpty);
+      });
       emptyStates.forEach(function(el) {
         el.classList.toggle("hidden", !showEmpty);
         if (showEmpty) {
@@ -289,5 +299,40 @@ const filteredPosts = activeCategory
 
     // Re-bind badges after View Transition navigations
     document.addEventListener("astro:after-swap", bindBadgeClicks);
+
+    // ===== 文章布局切换 =====
+    const listLayout = document.querySelector(".post-layout-list");
+    const gridLayout = document.querySelector(".post-layout-grid");
+
+    function applyLayout(layout) {
+      if (!listLayout || !gridLayout) return;
+      if (layout === "grid") {
+        listLayout.classList.add("hidden");
+        gridLayout.classList.remove("hidden");
+      } else {
+        listLayout.classList.remove("hidden");
+        gridLayout.classList.add("hidden");
+      }
+    }
+
+    // 初始读取设置
+    try {
+      const saved = JSON.parse(localStorage.getItem("blog-settings") || "{}");
+      applyLayout(saved.postLayout || "list");
+    } catch (e) {
+      applyLayout("list");
+    }
+
+    // 监听设置变化
+    document.addEventListener("setting-change", function(e) {
+      if (e.detail.key === "postLayout") return; // layout 有单独事件
+    });
+
+    // 监听 html 属性变化（设置面板会设置 data-post-layout）
+    const observer = new MutationObserver(function() {
+      const layout = document.documentElement.getAttribute("data-post-layout");
+      if (layout) applyLayout(layout);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-post-layout"] });
   })();
 </script>

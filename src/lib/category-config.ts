@@ -19,6 +19,7 @@ export const CATEGORIES: CategoryDef[] = [
   { name: "开源",         classes: "bg-indigo-200/30 text-indigo-600",      barColor: "#6366f1" },
   { name: "AI", classes: "bg-sky-200/30 text-sky-700", barColor: "#0ea5e9" },
   { name: "其他", classes: "bg-sky-200/30 text-sky-700", barColor: "#1ddecad2" },
+  { name: "开发工具",         classes: "bg-amber-200/30 text-amber-700",       barColor: "#d90642" },
 ];
 
 export type CategoryName = (typeof CATEGORIES)[number]["name"];

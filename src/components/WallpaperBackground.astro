@@ -1,0 +1,444 @@
+---
+import { getImage } from 'astro:assets';
+import img1 from "../assets/a1.jpg";
+import img2 from "../assets/a2.jpg";
+import img3 from "../assets/a3.jpg";
+
+const wallpaperImgs = [img1, img2, img3];
+const wallpapers = (await Promise.all(
+  wallpaperImgs.map(img => getImage({
+    src: img,
+    format: 'webp',
+    quality: 'mid',
+    width: 1920,
+  }))
+)).map(result => result.src);
+---
+
+<link rel="preload" as="image" href={wallpapers[0]} fetchpriority="high" />
+
+<!-- 壁纸背景层 -->
+<div id="wallpaper-container" class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+  <!-- 壁纸图片层（支持渐变过渡） -->
+  <div id="wallpaper-layer" class="absolute inset-0 bg-cover bg-center transition-opacity duration-700 opacity-100" style={`background-image: url('${wallpapers[0]}')`}></div>
+  <div id="wallpaper-layer-next" class="absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-700" style={`background-image: url('${wallpapers[1]}')`}></div>
+
+  <!-- 水波纹 Canvas -->
+  <canvas id="ripple-canvas" class="absolute inset-0 w-full h-full opacity-40"></canvas>
+
+  <!-- 遮罩层（根据模式调整） -->
+  <div id="wallpaper-overlay" class="absolute inset-0 bg-bg-base/60 backdrop-blur-[2px] transition-all duration-500"></div>
+</div>
+
+<!-- 樱花特效 Canvas -->
+<canvas id="sakura-canvas" class="fixed inset-0 z-[5] pointer-events-none opacity-0 transition-opacity duration-500"></canvas>
+
+<script>
+  const wallpapers = [
+    ...document.querySelectorAll('#wallpaper-layer, #wallpaper-layer-next')
+  ].map(el => el.style.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/)?.[1]).filter(Boolean);
+
+  let currentIndex = 0;
+  let carouselTimer = null;
+  let rippleAnimation = null;
+  let sakuraAnimation = null;
+
+  // ===== 读取设置 =====
+  function getSettings() {
+    try {
+      return JSON.parse(localStorage.getItem('blog-settings')) || {};
+    } catch { return {}; }
+  }
+
+  // ===== 应用壁纸模式 =====
+  function applyWallpaperMode(mode) {
+    const container = document.getElementById('wallpaper-container');
+    const overlay = document.getElementById('wallpaper-overlay');
+    const layers = [
+      document.getElementById('wallpaper-layer'),
+      document.getElementById('wallpaper-layer-next'),
+    ];
+
+    switch (mode) {
+      case 'banner':
+        // 横幅模式：只在顶部显示，下方有遮罩过渡
+        layers.forEach(l => {
+          l.style.height = '55vh';
+          l.style.top = '0';
+          l.style.bottom = 'auto';
+        });
+        overlay.style.background = 'linear-gradient(to bottom, rgba(232,228,222,0.1) 0%, rgba(232,228,222,0.7) 60%, rgba(232,228,222,1) 100%)';
+        overlay.style.backdropFilter = 'blur(0px)';
+        break;
+      case 'fullscreen':
+        // 全屏模式：铺满，轻微遮罩
+        layers.forEach(l => {
+          l.style.height = '100%';
+          l.style.top = '0';
+        });
+        overlay.style.background = 'rgba(232, 228, 222, 0.35)';
+        overlay.style.backdropFilter = 'blur(1px)';
+        break;
+      case 'transparent':
+        // 全屏透明：清晰壁纸，几乎无遮罩
+        layers.forEach(l => {
+          l.style.height = '100%';
+          l.style.top = '0';
+        });
+        overlay.style.background = 'rgba(232, 228, 222, 0.15)';
+        overlay.style.backdropFilter = 'blur(0px)';
+        break;
+      case 'solid':
+        // 纯色：隐藏壁纸
+        layers.forEach(l => l.style.opacity = '0');
+        overlay.style.background = 'var(--color-bg-base, #E8E4DE)';
+        break;
+    }
+  }
+
+  // ===== 切换壁纸 =====
+  function switchWallpaper(index) {
+    const settings = getSettings();
+    const useGradient = settings.gradientTransition !== false;
+    const layer1 = document.getElementById('wallpaper-layer');
+    const layer2 = document.getElementById('wallpaper-layer-next');
+
+    const nextIdx = index % wallpapers.length;
+    if (nextIdx === currentIndex) return;
+
+    if (useGradient) {
+      // 渐变过渡：用第二层淡入
+      layer2.style.backgroundImage = `url('${wallpapers[nextIdx]}')`;
+      layer2.style.opacity = '1';
+      setTimeout(() => {
+        layer1.style.backgroundImage = `url('${wallpapers[nextIdx]}')`;
+        layer1.style.opacity = '1';
+        layer2.style.opacity = '0';
+      }, 700);
+    } else {
+      layer1.style.backgroundImage = `url('${wallpapers[nextIdx]}')`;
+    }
+    currentIndex = nextIdx;
+  }
+
+  // ===== 壁纸轮播 =====
+  function startCarousel() {
+    stopCarousel();
+    carouselTimer = setInterval(() => {
+      switchWallpaper(currentIndex + 1);
+    }, 15000); // 15秒切换
+  }
+  function stopCarousel() {
+    if (carouselTimer) {
+      clearInterval(carouselTimer);
+      carouselTimer = null;
+    }
+  }
+
+  // ===== 水波纹动画 =====
+  function initRipple() {
+    const canvas = document.getElementById('ripple-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    let rafId = null;
+    let isPaused = false;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.scale(dpr, dpr);
+    }
+    resize();
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (resizeTimer) cancelAnimationFrame(resizeTimer);
+      resizeTimer = requestAnimationFrame(resize);
+    });
+
+    const waves = [];
+    for (let i = 0; i < 3; i++) {
+      waves.push({
+        y: window.innerHeight * (0.7 + i * 0.1),
+        amplitude: 20 + i * 10,
+        frequency: 0.008 + i * 0.002,
+        speed: 0.015 + i * 0.005,
+        offset: i * Math.PI * 0.5,
+        opacity: 0.08 - i * 0.02,
+      });
+    }
+
+    let lastTime = 0;
+    const step = 8;
+
+    function drawWaves(cssWidth, cssHeight, time) {
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+      waves.forEach(wave => {
+        wave.y = cssHeight * (0.7 + waves.indexOf(wave) * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(0, cssHeight);
+        for (let x = 0; x <= cssWidth; x += step) {
+          const y = wave.y + Math.sin(x * wave.frequency + time * wave.speed + wave.offset) * wave.amplitude;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(cssWidth, cssHeight);
+        ctx.closePath();
+        const gradient = ctx.createLinearGradient(0, wave.y - wave.amplitude, 0, cssHeight);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${wave.opacity})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      });
+    }
+
+    function animate(now) {
+      if (isPaused) return;
+      rafId = requestAnimationFrame(animate);
+      if (now - lastTime < 16) return;
+      lastTime = now;
+      drawWaves(window.innerWidth, window.innerHeight, now * 0.001);
+    }
+
+    function start() {
+      if (rafId) return;
+      isPaused = false;
+      lastTime = 0;
+      rafId = requestAnimationFrame(animate);
+    }
+
+    function stop() {
+      isPaused = true;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    const visibilityHandler = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    start();
+
+    rippleAnimation = {
+      cancel: () => {
+        stop();
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        if (resizeTimer) cancelAnimationFrame(resizeTimer);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+  }
+
+  function stopRipple() {
+    if (rippleAnimation) {
+      rippleAnimation.cancel();
+      rippleAnimation = null;
+    }
+  }
+
+  // ===== 樱花特效 =====
+  function initSakura() {
+    const canvas = document.getElementById('sakura-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    canvas.style.opacity = '1';
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    let rafId = null;
+    let isPaused = false;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.scale(dpr, dpr);
+    }
+    resize();
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (resizeTimer) cancelAnimationFrame(resizeTimer);
+      resizeTimer = requestAnimationFrame(resize);
+    });
+
+    const sakuraPetals = [];
+    const petalCount = 25;
+
+    class Petal {
+      constructor() { this.reset(true); }
+      reset(initial = false) {
+        this.x = Math.random() * window.innerWidth;
+        this.y = initial ? Math.random() * window.innerHeight : -20;
+        this.size = 6 + Math.random() * 8;
+        this.speedY = 0.8 + Math.random() * 1.5;
+        this.speedX = -0.5 + Math.random();
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (-0.02 + Math.random() * 0.04);
+        this.opacity = 0.5 + Math.random() * 0.4;
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX + Math.sin(this.y * 0.01) * 0.5;
+        this.rotation += this.rotationSpeed;
+        if (this.y > window.innerHeight + 20 || this.x < -20 || this.x > window.innerWidth + 20) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#F8D7DA';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = this.opacity * 0.3;
+        ctx.fillStyle = '#E8C4C8';
+        ctx.beginPath();
+        ctx.ellipse(this.size * 0.3, 0, this.size * 0.3, this.size * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < petalCount; i++) {
+      sakuraPetals.push(new Petal());
+    }
+
+    let lastTime = 0;
+
+    function animate(now) {
+      if (isPaused) return;
+      rafId = requestAnimationFrame(animate);
+      if (now - lastTime < 16) return;
+      lastTime = now;
+
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      sakuraPetals.forEach(p => {
+        p.update();
+        p.draw();
+      });
+    }
+
+    function start() {
+      if (rafId) return;
+      isPaused = false;
+      lastTime = 0;
+      rafId = requestAnimationFrame(animate);
+    }
+
+    function stop() {
+      isPaused = true;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    const visibilityHandler = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    start();
+
+    sakuraAnimation = {
+      cancel: () => {
+        stop();
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        if (resizeTimer) cancelAnimationFrame(resizeTimer);
+        canvas.style.opacity = '0';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+  }
+
+  function stopSakura() {
+    if (sakuraAnimation) {
+      sakuraAnimation.cancel();
+      sakuraAnimation = null;
+    }
+  }
+
+  // ===== 应用所有设置 =====
+  function applyAll() {
+    const s = getSettings();
+
+    applyWallpaperMode(s.wallpaperMode || 'banner');
+
+    // 初始壁纸
+    if (s.currentWallpaper && s.currentWallpaper > 0) {
+      switchWallpaper(s.currentWallpaper);
+    }
+
+    // 轮播
+    if (s.wallpaperCarousel) {
+      startCarousel();
+    } else {
+      stopCarousel();
+    }
+
+    // 水波纹
+    if (s.waterRipple !== false) {
+      initRipple();
+    } else {
+      stopRipple();
+    }
+
+    // 樱花
+    if (s.sakuraEffect) {
+      initSakura();
+    } else {
+      stopSakura();
+    }
+  }
+
+  // ===== 监听设置变化 =====
+  document.addEventListener('setting-change', (e) => {
+    const { key, enabled } = e.detail;
+    switch (key) {
+      case 'wallpaperCarousel':
+        enabled ? startCarousel() : stopCarousel();
+        break;
+      case 'waterRipple':
+        enabled ? initRipple() : stopRipple();
+        break;
+      case 'sakuraEffect':
+        enabled ? initSakura() : stopSakura();
+        break;
+    }
+  });
+
+  document.addEventListener('wallpaper-change', (e) => {
+    const s = e.detail;
+    applyWallpaperMode(s.wallpaperMode);
+    if (typeof s.currentWallpaper === 'number') {
+      switchWallpaper(s.currentWallpaper);
+    }
+  });
+
+  // 初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAll);
+  } else {
+    applyAll();
+  }
+</script>

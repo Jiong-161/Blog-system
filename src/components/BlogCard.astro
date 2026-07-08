@@ -16,10 +16,11 @@ const hasCover = !!data.coverImage;
 <a
   href={"/blog/" + post.id}
   data-category={data.category}
-  class="blog-card group block rounded-default bg-secondary/40 shadow-soft border border-primary/5 transition-all duration-300 hover:shadow-soft-hover hover:-translate-y-1 overflow-hidden"
+  class="blog-card group block glass-card rounded-default overflow-hidden"
+  class:list={{ 'flex items-center gap-4 p-5': !showCover }}
 >
   {showCover && (
-    <div class="relative h-44 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/30 to-accent-pink/20">
+    <div class="relative h-44 overflow-hidden">
       {hasCover ? (
         <img
           src={data.coverImage}
@@ -28,15 +29,15 @@ const hasCover = !!data.coverImage;
           loading="lazy"
         />
       ) : (
-        <div class="flex h-full items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-primary/20"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div class="flex h-full items-center justify-center bg-gradient-to-br from-primary/15 via-white/20 to-accent-green/15">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-primary/30"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
       )}
       <span
         role="button"
         tabindex="0"
         data-category-badge={data.category}
-        class="category-badge absolute top-3 left-3 inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide shadow-soft bg-white/70 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+        class="category-badge absolute top-3 left-3 inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide glass-card cursor-pointer hover:scale-105 transition-transform duration-200"
         class:list={{ [getCategoryTextClass(data.category)]: true }}
       >
         {data.category}
@@ -44,8 +45,20 @@ const hasCover = !!data.coverImage;
     </div>
   )}
 
-  <div class="p-5">
-    <h3 class="text-base font-semibold text-text-main group-hover:text-primary transition-colors duration-250 leading-snug line-clamp-2">
+  <div class:list={{ 'p-5': showCover, 'flex-1 min-w-0': !showCover }}>
+    {!showCover && (
+      <span
+        data-category-badge={data.category}
+        class="category-badge inline-block text-xs font-medium mb-2"
+        class:list={{ [getCategoryTextClass(data.category)]: true }}
+      >
+        {data.category}
+      </span>
+    )}
+
+    <h3 class="font-semibold text-text-main group-hover:text-primary transition-colors duration-250 leading-snug line-clamp-2"
+      class:list={{ 'text-base': showCover, 'text-lg': !showCover }}
+    >
       {data.title}
     </h3>
 
@@ -53,7 +66,7 @@ const hasCover = !!data.coverImage;
       {data.description}
     </p>
 
-    <div class="mt-4 flex items-center justify-between text-xs text-text-sub/50">
+    <div class="mt-3 flex items-center justify-between text-xs text-text-sub/60">
       <time>{formatDateShort(data.pubDate)}</time>
       {data.tags && data.tags.length > 0 && (
         <span class="truncate max-w-[60%] text-right">{data.tags.slice(0, 2).join(", ")}{data.tags.length > 2 ? "..." : ""}</span>

@@ -18,45 +18,49 @@ const { data } = post;
 ---
 
 <Layout title={data.title} description={data.description}>
-  <div class="mx-auto max-w-6xl px-6 pt-28 pb-24 bg-white rounded-default shadow-soft mt-28">
-    <div class="mb-10 max-w-3xl mx-auto lg:ml-[33%]">
-      <div class="flex items-center gap-3 text-sm text-text-sub/60 mb-4">
-        <span
-          class="inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide"
-          class:list={{
-            'bg-accent-green/15 text-accent-green': data.category === '\u524d\u7aef',
-            'bg-primary/15 text-primary': data.category === '\u8bbe\u8ba1\u7cfb\u7edf',
-            'bg-accent-pink/15 text-accent-pink': data.category === '\u5de5\u7a0b\u5316',
-            'bg-amber-200/30 text-amber-700': data.category === '\u968f\u7b14',
-            'bg-indigo-200/30 text-indigo-600': data.category === '\u5f00\u6e90',
-          }}
-        >
-          {data.category}
-        </span>
-        <time>{formatDate(data.pubDate)}</time>
-        {data.updatedDate && (
-          <span class="text-text-sub/40">\u00b7 \u66f4\u65b0\u4e8e {formatDate(data.updatedDate)}</span>
+  <div class="mx-auto max-w-6xl px-6 pt-28 pb-24">
+    <!-- 文章头部玻璃卡片 -->
+    <div class="glass-card rounded-lg p-8 mb-8">
+      <div class="max-w-3xl mx-auto lg:ml-[33%]">
+        <div class="flex items-center gap-3 text-sm text-text-sub/60 mb-4">
+          <span
+            class="inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide bg-white/50"
+            class:list={{
+              'text-accent-green': data.category === '前端',
+              'text-primary': data.category === '设计系统',
+              'text-accent-pink': data.category === '工程化',
+              'text-amber-700': data.category === '随笔',
+              'text-indigo-600': data.category === '开源',
+            }}
+          >
+            {data.category}
+          </span>
+          <time>{formatDate(data.pubDate)}</time>
+          {data.updatedDate && (
+            <span class="text-text-sub/40">· 更新于 {formatDate(data.updatedDate)}</span>
+          )}
+        </div>
+        <h1 class="text-3xl md:text-4xl font-semibold text-text-main tracking-tight leading-snug">
+          {data.title}
+        </h1>
+        <p class="mt-4 text-lg text-text-sub leading-relaxed">{data.description}</p>
+        {data.tags && data.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mt-5">
+            {data.tags.map((tag: string) => (
+              <span class="text-xs text-text-sub/60 bg-white/40 px-3 py-1 rounded-full">#{tag}</span>
+            ))}
+          </div>
         )}
       </div>
-      <h1 class="text-3xl md:text-4xl font-bold text-text-main tracking-tight leading-snug">
-        {data.title}
-      </h1>
-      <p class="mt-4 text-lg text-text-sub leading-relaxed">{data.description}</p>
-      {data.tags && data.tags.length > 0 && (
-        <div class="flex flex-wrap gap-2 mt-5">
-          {data.tags.map((tag: string) => (
-            <span class="text-xs text-text-sub/50 bg-primary/5 px-3 py-1 rounded-full">#{tag}</span>
-          ))}
-        </div>
-      )}
     </div>
 
     <div class="flex gap-10 relative">
+      <!-- TOC 侧边栏 - 玻璃质感 -->
       <aside class="hidden lg:block w-[25%] shrink-0">
-        <nav id="toc-sidebar" class="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4">
-          <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-4">\u76ee\u5f55</h3>
+        <div class="glass-card rounded-lg p-4 sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/50 mb-4 px-2">目录</h3>
           {headings && headings.length > 0 ? (
-            <ul class="toc-list space-y-1.5 text-sm border-l border-primary/10 pl-4">
+            <ul class="toc-list space-y-1 text-sm">
               {
                 headings
                   .filter((h: any) => h.depth <= 3)
@@ -65,8 +69,8 @@ const { data } = post;
                       <a
                         href={'#' + h.slug}
                         data-toc-slug={h.slug}
-                        class="toc-link block py-1 text-text-sub/60 hover:text-primary transition-colors duration-200 leading-relaxed"
-                        style={{ paddingLeft: (h.depth - 1) * 12 + 'px' }}
+                        class="toc-link block py-1.5 px-2 rounded-md text-text-sub/60 hover:text-primary hover:bg-white/30 transition-all duration-200 leading-relaxed"
+                        style={{ paddingLeft: (h.depth - 1) * 12 + 8 + 'px' }}
                       >
                         {h.text}
                       </a>
@@ -75,21 +79,23 @@ const { data } = post;
               }
             </ul>
           ) : null}
-        </nav>
+        </div>
       </aside>
 
-      <article class="flex-1 min-w-0 prose-container max-w-3xl">
+      <!-- 正文区域 - 玻璃卡片包裹，内部纯净阅读 -->
+      <article class="flex-1 min-w-0 prose-container max-w-3xl glass-card rounded-lg p-8 md:p-10">
         <Content />
       </article>
     </div>
 
-    <div class="mt-20 pt-8 border-t border-primary/10 flex justify-between">
+    <!-- 返回按钮 -->
+    <div class="mt-8 flex justify-center">
       <a
         href="/blog"
-        class="inline-flex items-center gap-1.5 text-sm text-text-sub hover:text-primary transition-colors duration-250"
+        class="inline-flex items-center gap-1.5 text-sm glass-card rounded-lg px-5 py-2.5 text-text-sub hover:text-primary transition-all duration-250"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        \u8fd4\u56de\u535a\u5ba2\u5217\u8868
+        返回博客列表
       </a>
     </div>
   </div>
@@ -107,7 +113,7 @@ const { data } = post;
     margin-top: 2.5em;
     margin-bottom: 0.8em;
     padding-bottom: 0.3em;
-    border-bottom: 1px solid rgba(143, 170, 190, 0.12);
+    border-bottom: 1px solid rgba(138, 161, 177, 0.12);
     color: var(--color-text-main);
     scroll-margin-top: 6rem;
   }
@@ -126,7 +132,7 @@ const { data } = post;
     color: var(--color-primary);
     text-decoration: underline;
     text-underline-offset: 2px;
-    text-decoration-color: rgba(143, 170, 190, 0.3);
+    text-decoration-color: rgba(138, 161, 177, 0.3);
     transition: color 0.25s, text-decoration-color 0.25s;
   }
   .prose-container a:hover {
@@ -145,7 +151,7 @@ const { data } = post;
     margin: 1.5em 0;
     color: var(--color-text-sub);
     font-style: italic;
-    background: rgba(143, 170, 190, 0.05);
+    background: rgba(138, 161, 177, 0.06);
     padding: 1em 1.2em;
     border-radius: 0 8px 8px 0;
   }
@@ -153,7 +159,7 @@ const { data } = post;
   .prose-container strong { font-weight: 600; color: var(--color-text-main); }
   .prose-container hr {
     border: none;
-    border-top: 1px solid rgba(143, 170, 190, 0.12);
+    border-top: 1px solid rgba(138, 161, 177, 0.12);
     margin: 2.5em 0;
   }
   .prose-container img { border-radius: 12px; margin: 1.5em 0; max-width: 100%; }
@@ -165,14 +171,14 @@ const { data } = post;
   }
   .prose-container th, .prose-container td {
     padding: 0.6em 1em;
-    border: 1px solid rgba(143, 170, 190, 0.15);
+    border: 1px solid rgba(138, 161, 177, 0.15);
     text-align: left;
   }
-  .prose-container th { background: rgba(143, 170, 190, 0.08); font-weight: 600; }
+  .prose-container th { background: rgba(138, 161, 177, 0.08); font-weight: 600; }
   .prose-container code {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 0.85em;
-    background: rgba(143, 170, 190, 0.1);
+    background: rgba(138, 161, 177, 0.1);
     padding: 0.15em 0.4em;
     border-radius: 4px;
   }
@@ -197,9 +203,7 @@ const { data } = post;
   .toc-link.toc-active {
     color: var(--color-primary);
     font-weight: 500;
-    border-left: 2px solid var(--color-primary);
-    margin-left: -17px;
-    padding-left: 15px;
+    background: rgba(255, 255, 255, 0.4);
   }
 </style>
 
@@ -208,7 +212,7 @@ const { data } = post;
   document.querySelectorAll('.prose-container pre').forEach((pre) => {
     const btn = document.createElement('button');
     btn.className = 'absolute top-3 right-3 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all duration-200';
-    btn.setAttribute('aria-label', '\u590d\u5236\u4ee3\u7801');
+    btn.setAttribute('aria-label', '复制代码');
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
     pre.classList.add('group');
     pre.style.position = 'relative';
@@ -226,7 +230,7 @@ const { data } = post;
     });
   });
 
-  // TOC ScrollSpy - highlight current heading on scroll
+  // TOC ScrollSpy - 使用 IntersectionObserver 优化性能
   const tocLinks = document.querySelectorAll('.toc-link');
   if (tocLinks.length > 0) {
     const headings = Array.from(tocLinks).map((link) => {
@@ -234,24 +238,39 @@ const { data } = post;
       return document.getElementById(slug);
     }).filter(Boolean);
 
-    const updateActiveTOC = () => {
-      let activeIndex = -1;
-      const scrollTop = window.scrollY + 120;
+    let activeIndex = -1;
 
-      for (let i = headings.length - 1; i >= 0; i--) {
-        const el = headings[i];
-        if (el && el.offsetTop <= scrollTop) {
-          activeIndex = i;
-          break;
+    const observer = new IntersectionObserver((entries) => {
+      let newActiveIndex = -1;
+      entries.forEach((entry) => {
+        const idx = headings.indexOf(entry.target);
+        if (entry.isIntersecting && entry.boundingClientRect.top <= 150) {
+          if (idx > newActiveIndex) {
+            newActiveIndex = idx;
+          }
+        }
+      });
+
+      if (newActiveIndex === -1) {
+        for (let i = headings.length - 1; i >= 0; i--) {
+          if (headings[i].getBoundingClientRect().top < 150) {
+            newActiveIndex = i;
+            break;
+          }
         }
       }
 
-      tocLinks.forEach((link, i) => {
-        link.classList.toggle('toc-active', i === activeIndex);
-      });
-    };
+      if (newActiveIndex !== activeIndex) {
+        activeIndex = newActiveIndex;
+        tocLinks.forEach((link, i) => {
+          link.classList.toggle('toc-active', i === activeIndex);
+        });
+      }
+    }, {
+      rootMargin: '-120px 0px -60% 0px',
+      threshold: [0, 0.25, 0.5, 0.75, 1]
+    });
 
-    window.addEventListener('scroll', updateActiveTOC, { passive: true });
-    updateActiveTOC();
+    headings.forEach((h) => observer.observe(h));
   }
 </script>

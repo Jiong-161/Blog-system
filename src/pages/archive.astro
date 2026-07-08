@@ -60,8 +60,8 @@ const filteredTimeline = activeCategory
     <div class="flex gap-12 lg:gap-16">
       <aside class="hidden lg:block shrink-0" style="width: 25%; max-width: 300px;">
         <nav class="sticky space-y-6" style="top: 7rem;">
-          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
-            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-5">归档概览</h3>
+          <div class="glass-card rounded-xl p-6">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/50 mb-5">归档概览</h3>
             <div class="space-y-4">
               <div class="flex items-center justify-between">
                 <span class="text-sm text-text-sub">
@@ -96,8 +96,8 @@ const filteredTimeline = activeCategory
               </div>
             </div>
           </div>
-          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
-            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-4">快速导航</h3>
+          <div class="glass-card rounded-xl p-6">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/50 mb-4">快速导航</h3>
             <div class="space-y-1" id="year-nav">
               {yearSet.map((y) => {
                 const count = sortedPosts.filter((p) => new Date(p.data.pubDate).getFullYear() === y).length;
@@ -118,8 +118,8 @@ const filteredTimeline = activeCategory
             </div>
           </div>
 
-          <div class="rounded-xl bg-secondary/30 p-6 shadow-soft border border-primary/5" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
-            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/40 mb-4">分类筛选</h3>
+          <div class="glass-card rounded-xl p-6">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-text-sub/50 mb-4">分类筛选</h3>
             <div class="flex flex-wrap gap-2">
               <a href="/archive" class="inline-block rounded-full px-3 py-1 text-xs font-medium transition-all duration-200" class:list={{ "bg-primary/15 text-primary": !activeCategory, "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": !!activeCategory }}>全部</a>
               {categories.map((cat) => (
@@ -149,7 +149,7 @@ const filteredTimeline = activeCategory
             {filteredTimeline.map(({ year, total, months }, yearIdx) => (
               <section id={"year-" + year} class="mb-16 last:mb-0" data-observe>
                 <div class="year-header">
-                  <div class="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-secondary/70 border border-primary/10 shadow-soft" style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                  <div class="inline-flex items-center gap-3 px-5 py-3 glass-card rounded-lg">
                     <span class="text-xl md:text-2xl font-semibold text-primary tracking-tight">{year}</span>
                     <span class="text-xs font-medium text-accent-green bg-accent-green/10 px-2.5 py-0.5 rounded-full">{total} 篇</span>
                   </div>
@@ -237,19 +237,15 @@ const filteredTimeline = activeCategory
       const yearLinks = document.querySelectorAll(".year-nav-link");
       const yearSections = document.querySelectorAll("[id^='year-']");
 
-      const updateYearNav = () => {
-        let activeYear = null;
-        const scrollTop = window.scrollY + 220;
+      let activeYear = null;
+      let ticking = false;
 
-        yearSections.forEach((section) => {
-          if (section.offsetTop <= scrollTop) {
-            activeYear = section.id.replace("year-", "");
-          }
-        });
-
+      function updateYearNavUI(year) {
+        if (year === activeYear) return;
+        activeYear = year;
         yearLinks.forEach((link) => {
-          const year = link.getAttribute("data-year");
-          if (year === activeYear) {
+          const linkYear = link.getAttribute("data-year");
+          if (linkYear === year) {
             link.classList.add("bg-primary/10", "text-primary");
             link.classList.remove("text-text-sub", "hover:bg-primary/5", "hover:text-primary");
             const dot = link.querySelector(".rounded-full");
@@ -261,10 +257,32 @@ const filteredTimeline = activeCategory
             if (dot) dot.classList.remove("bg-primary");
           }
         });
-      };
+      }
 
-      window.addEventListener("scroll", updateYearNav, { passive: true });
-      updateYearNav();
+      function updateActiveYear() {
+        let newActiveYear = null;
+        const viewportY = 220;
+        for (let i = yearSections.length - 1; i >= 0; i--) {
+          const rect = yearSections[i].getBoundingClientRect();
+          if (rect.top <= viewportY) {
+            newActiveYear = yearSections[i].id.replace("year-", "");
+            break;
+          }
+        }
+        if (newActiveYear) updateYearNavUI(newActiveYear);
+        ticking = false;
+      }
+
+      window.addEventListener("scroll", () => {
+        if (!ticking) {
+          requestAnimationFrame(updateActiveYear);
+          ticking = true;
+        }
+      }, { passive: true });
+
+      if (yearSections.length > 0) {
+        updateActiveYear();
+      }
 
       document.querySelectorAll(".archive-entry").forEach((entry) => {
         entry.addEventListener("mouseenter", () => {

@@ -3,6 +3,8 @@ import '../styles/global.css';
 import '../styles/animations.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import WallpaperBackground from '../components/WallpaperBackground.astro';
+import SettingsPanel from '../components/SettingsPanel.astro';
 
 export interface Props {
   title: string;
@@ -24,25 +26,35 @@ const { title, description = 'Morandi Tech Blog — 在代码与美学之间寻�
     <title>{title} | Morandi Tech Blog</title>
     <meta name="description" content={description} />
 
-    <!-- 字体预加载 -->
+    <!-- 字体预连接 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
     <!-- View Transitions -->
     <meta name="astro-view-transitions-enabled" content="true" />
   </head>
   <body>
+    <WallpaperBackground />
     <Header />
+    <SettingsPanel />
 
     <!-- 页面主体 -->
-    <main>
+    <main class="relative z-10">
       <slot />
     </main>
 
-    <Footer />
+    <Footer class="relative z-10" />
   </body>
 </html>
