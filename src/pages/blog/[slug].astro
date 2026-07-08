@@ -22,6 +22,16 @@ const { data } = post;
     <!-- 文章头部玻璃卡片 -->
     <div class="glass-card rounded-lg p-8 mb-8">
       <div class="max-w-3xl mx-auto lg:ml-[33%]">
+        {data.coverImage && (
+          <div class="mb-6 rounded-lg overflow-hidden w-[30%] h-[180px] float-left mr-6">
+            <img
+              src={data.coverImage}
+              alt={data.title + ' 封面图'}
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
         <div class="flex items-center gap-3 text-sm text-text-sub/60 mb-4">
           <span
             class="inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide bg-white/50"
