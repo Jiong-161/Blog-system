@@ -2,7 +2,7 @@
 title: "使用 GitHub Actions 构建自动化前端工作流"
 description: "从 CI/CD 到自动化发布，用 GitHub Actions 搭建一套完整的前端工程化流水线。"
 pubDate: 2026-06-20
-category: "工程化"
+category: "随笔"
 tags: ["GitHub Actions", "CI/CD", "自动化", "DevOps"]
 draft: false
 ---

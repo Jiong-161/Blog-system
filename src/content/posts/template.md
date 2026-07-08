@@ -2,7 +2,7 @@
 title: "文章标题"
 description: "简短的文章描述，会显示在卡片和页面标题标签下方"
 pubDate: 2026-07-07
-category: "前端"
+category: "java"
 tags: ["标签1", "标签2"]
 coverImage: "/images/uploads/a1.jpg"
 draft: false

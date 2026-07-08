@@ -2,7 +2,7 @@
 title: "用 Python 从零搭建 RAG 系统：让大模型不再「幻觉」"
 description: "深入理解 RAG（检索增强生成）原理，用 Python + LangChain 从零搭建一套可落地的知识问答系统。"
 pubDate: 2026-07-07
-category: "前端"
+category: "AI"
 tags: ["Python", "RAG", "LLM", "LangChain"]
 coverImage: "/images/uploads/a1.jpg"
 draft: false

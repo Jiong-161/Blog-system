@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import BlogCard from "../../components/BlogCard.astro";
 import { getCollection } from "astro:content";
 import { getCategories } from "../../lib/utils";
+import { getCategoryClasses } from "../../lib/category-config";
 
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
 const sortedPosts = allPosts.sort(
@@ -21,11 +22,11 @@ const filteredPosts = activeCategory
     <!-- 页头 -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-text-main tracking-tight">博客</h1>
-      <p class="mt-2 text-text-sub">
+      <p class="mt-2 text-text-sub" data-category-heading>
         {activeCategory ? (
-          <>“{activeCategory}” 分类下共; {filteredPosts.length} 篇文章</>
+          <>"「{activeCategory}」分类下共 <strong>{filteredPosts.length}</strong> 篇文章</>
         ) : (
-          <>共; {allPosts.length} 篇文章</>
+          <>共 <strong>{allPosts.length}</strong> 篇文章</>
         )}
       </p>
     </div>
@@ -33,31 +34,34 @@ const filteredPosts = activeCategory
     <!-- 移动端分类筛选栏（水平滚动芯片） -->
     <div class="lg:hidden mb-6 overflow-x-auto scrollbar-none -mx-6 px-6">
       <div class="flex gap-2 whitespace-nowrap pb-2">
-        <a
-          href="/blog"
-          class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0"
+        <button
+          data-category-clear
+          class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer"
           class:list={{
             "bg-primary/15 text-primary font-semibold": !activeCategory,
             "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": activeCategory,
           }}
         >
           全部
-        </a>
-        {categories.map((cat) => (
-          <a
-            href={`/blog?category=${encodeURIComponent(cat.name)}`}
-            class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0"
-            class:list={{
-              "bg-accent-green/15 text-accent-green font-semibold": activeCategory === cat.name && cat.name === "设计系统",
-              "bg-primary/15 text-primary font-semibold": activeCategory === cat.name && cat.name !== "设计系统",
-              "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": activeCategory && activeCategory !== cat.name,
-              "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": !activeCategory,
-            }}
-          >
-            {cat.name}
-            <span class="ml-1 text-xs opacity-60">{cat.count}</span>
-          </a>
-        ))}
+        </button>
+        {categories.map((cat) => {
+          const style = getCategoryClasses(cat.name);
+          const isActive = activeCategory === cat.name;
+          return (
+            <button
+              data-category-chip={cat.name}
+              data-active-class={style}
+              class="inline-block rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 shrink-0 cursor-pointer"
+              class:list={{
+                [style + " font-semibold"]: isActive,
+                "bg-primary/5 text-text-sub hover:bg-primary/10 hover:text-primary": !isActive,
+              }}
+            >
+              {cat.name}
+              <span class="ml-1 text-xs opacity-60">{cat.count}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
 
@@ -65,43 +69,32 @@ const filteredPosts = activeCategory
       <!-- 左侧分类栏（桌面） -->
       <aside class="hidden lg:block w-56 shrink-0">
         <nav class="sticky top-28 space-y-1">
-          <a
-            href="/blog"
-            class="block rounded-default px-4 py-2 text-sm font-medium transition-all duration-200"
+          <button
+            data-category-clear
+            class="block w-full text-left rounded-default px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer"
             class:list={{
               "bg-primary/10 text-primary": !activeCategory,
               "text-text-sub hover:text-primary hover:bg-primary/5": activeCategory,
             }}
           >
             全部文章
-          </a>
+          </button>
           {categories.map((cat) => {
-            const catColors: Record<string, string> = {
-              "前端": "hover:bg-accent-green/10 hover:text-accent-green",
-              "设计系统": "hover:bg-primary/10 hover:text-primary",
-              "工程化": "hover:bg-accent-pink/10 hover:text-accent-pink",
-              "随笔": "hover:bg-amber-200/20 hover:text-amber-700",
-              "开源": "hover:bg-indigo-200/20 hover:text-indigo-600",
-            };
-            const activeColors: Record<string, string> = {
-              "前端": "bg-accent-green/15 text-accent-green",
-              "设计系统": "bg-primary/15 text-primary",
-              "工程化": "bg-accent-pink/15 text-accent-pink",
-              "随笔": "bg-amber-200/30 text-amber-700",
-              "开源": "bg-indigo-200/30 text-indigo-600",
-            };
+            const style = getCategoryClasses(cat.name);
+            const isActive = activeCategory === cat.name;
             return (
-              <a
-                href={`/blog?category=${encodeURIComponent(cat.name)}`}
-                class="block rounded-default px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center justify-between"
+              <button
+                data-category-chip={cat.name}
+                data-active-class={style}
+                class="block w-full text-left rounded-default px-4 py-2 text-sm font-medium transition-all duration-200 flex items-center justify-between cursor-pointer"
                 class:list={{
-                  [activeColors[cat.name] || "bg-primary/10 text-primary"]: activeCategory === cat.name,
-                  [catColors[cat.name] || "text-text-sub hover:bg-primary/5 hover:text-primary"]: activeCategory !== cat.name,
+                  [style]: isActive,
+                  "text-text-sub hover:bg-primary/5 hover:text-primary": !isActive,
                 }}
               >
                 <span>{cat.name}</span>
                 <span class="text-xs opacity-50">{cat.count}</span>
-              </a>
+              </button>
             );
           })}
         </nav>
@@ -110,18 +103,191 @@ const filteredPosts = activeCategory
       <!-- 右侧文章卡片流 -->
       <div class="flex-1 min-w-0">
         {filteredPosts.length > 0 ? (
-          <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2" data-blog-grid>
             {filteredPosts.map((post) => <BlogCard post={post} />)}
           </div>
         ) : (
-          <div class="text-center py-24 text-text-sub/50">
+          <div class="text-center py-24 text-text-sub/50" data-empty-state>
             <p>该分类下暂无文章</p>
-            <a href="/blog" class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block">
-              查看全部文章 →;
-            </a>
+            <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
+              查看全部文章 &rarr;
+            </button>
           </div>
         )}
+        <!-- 空状态占位（JS 动态切换用） -->
+        <div class="text-center py-24 text-text-sub/50 hidden" data-empty-state>
+          <p>该分类下暂无文章</p>
+          <button data-category-clear class="text-primary hover:text-accent-pink transition-colors duration-250 mt-2 inline-block cursor-pointer">
+            查看全部文章 &rarr;
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </Layout>
+
+<style>
+  .blog-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .blog-card.hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  (function() {
+    "use strict";
+
+    if (window.__blogFilterInitialized) return;
+    window.__blogFilterInitialized = true;
+
+    const grid = document.querySelector("[data-blog-grid]");
+    if (!grid) return;
+
+    const cards = grid.querySelectorAll(".blog-card[data-category]");
+    const chips = document.querySelectorAll("[data-category-chip]");
+    const clearBtns = document.querySelectorAll("[data-category-clear]");
+    const headingEl = document.querySelector("[data-category-heading]");
+    const emptyStates = document.querySelectorAll("[data-empty-state]");
+
+    // --- State ---
+    function getCategoryFromURL() {
+      return new URLSearchParams(window.location.search).get("category") || null;
+    }
+    let activeCategory = getCategoryFromURL();
+
+    // --- Core filter function ---
+    function applyFilter(category, updateURL) {
+      if (updateURL === undefined) updateURL = true;
+      activeCategory = category;
+
+      // 1. Update URL via pushState
+      if (updateURL) {
+        var url = new URL(window.location);
+        if (category) {
+          url.searchParams.set("category", category);
+        } else {
+          url.searchParams.delete("category");
+        }
+        history.pushState({ category: category }, "", url);
+      }
+
+      // 2. Update chip active states (via data-active-class)
+      chips.forEach(function(chip) {
+        var cat = chip.getAttribute("data-category-chip");
+        var activeClass = chip.getAttribute("data-active-class") || "";
+        if (cat === category) {
+          chip.classList.add("font-semibold");
+          if (activeClass) {
+            activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.add(c); });
+          }
+        } else {
+          chip.classList.remove("font-semibold");
+          if (activeClass) {
+            activeClass.split(" ").filter(Boolean).forEach(function(c) { chip.classList.remove(c); });
+          }
+        }
+      });
+
+      // 3. Update clear buttons
+      clearBtns.forEach(function(btn) {
+        if (!category) {
+          btn.classList.add("bg-primary/10", "text-primary");
+          btn.classList.remove("bg-primary/5", "text-text-sub");
+        } else {
+          btn.classList.remove("bg-primary/10", "text-primary");
+          btn.classList.add("bg-primary/5", "text-text-sub");
+        }
+      });
+
+      // 4. Filter cards with staggered animation
+      var visibleCount = 0;
+      cards.forEach(function(card, index) {
+        var cardCat = card.getAttribute("data-category");
+        if (!category || cardCat === category) {
+          card.classList.remove("hidden");
+          visibleCount++;
+          // Re-trigger floatUp animation
+          card.style.animation = "none";
+          card.offsetHeight; // force reflow
+          card.style.animation = "floatUp 0.4s ease-out " + (visibleCount - 1) * 60 + "ms both";
+        } else {
+          card.classList.add("hidden");
+          card.style.animation = "none";
+        }
+      });
+
+      // 5. Update heading text
+      if (headingEl) {
+        headingEl.innerHTML = category
+          ? "「" + category + "」分类下共 <strong>" + visibleCount + "</strong> 篇文章"
+          : "共 <strong>" + visibleCount + "</strong> 篇文章";
+      }
+
+      // 6. Toggle empty state
+      var showEmpty = visibleCount === 0;
+      if (grid) {
+        grid.classList.toggle("hidden", showEmpty);
+      }
+      emptyStates.forEach(function(el) {
+        el.classList.toggle("hidden", !showEmpty);
+        if (showEmpty) {
+          el.classList.remove("hidden");
+        }
+      });
+      // Ensure only one empty state is visible at a time
+      if (showEmpty && emptyStates.length > 1) {
+        emptyStates[0].classList.remove("hidden");
+        for (var i = 1; i < emptyStates.length; i++) {
+          emptyStates[i].classList.add("hidden");
+        }
+      }
+    }
+
+    // --- Event: chip clicks ---
+    chips.forEach(function(chip) {
+      chip.addEventListener("click", function() {
+        var cat = chip.getAttribute("data-category-chip");
+        applyFilter(cat);
+      });
+    });
+
+    // --- Event: clear button clicks ---
+    clearBtns.forEach(function(btn) {
+      btn.addEventListener("click", function() { applyFilter(null); });
+    });
+
+    // --- Event: popstate (back/forward) ---
+    window.addEventListener("popstate", function() {
+      var cat = getCategoryFromURL();
+      applyFilter(cat, false);
+    });
+
+    // --- Event: BlogCard category badge clicks ---
+    function bindBadgeClicks() {
+      document.querySelectorAll("[data-category-badge]").forEach(function(badge) {
+        if (badge.__bound) return;
+        badge.__bound = true;
+        badge.addEventListener("click", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var cat = badge.getAttribute("data-category-badge");
+          if (cat) applyFilter(cat);
+        });
+        badge.addEventListener("keydown", function(e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            var cat = badge.getAttribute("data-category-badge");
+            if (cat) applyFilter(cat);
+          }
+        });
+      });
+    }
+    bindBadgeClicks();
+
+    // Re-bind badges after View Transition navigations
+    document.addEventListener("astro:after-swap", bindBadgeClicks);
+  })();
+</script>

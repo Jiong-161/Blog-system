@@ -2,7 +2,7 @@
 title: "从零搭建 Monorepo：Turborepo 与 pnpm 实践"
 description: "为什么选择 Monorepo？如何用 pnpm workspace + Turborepo 搭建一个可维护的前端 Monorepo 项目。"
 pubDate: 2026-06-12
-category: "工程化"
+category: "其他"
 tags: ["Monorepo", "Turborepo", "pnpm", "工程化"]
 draft: false
 ---

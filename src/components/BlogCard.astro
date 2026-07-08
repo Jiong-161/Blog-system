@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { formatDateShort } from '../lib/utils';
+import { getCategoryTextClass } from '../lib/category-config';
 
 export interface Props {
   post: CollectionEntry<"posts">;
@@ -14,7 +15,8 @@ const hasCover = !!data.coverImage;
 
 <a
   href={"/blog/" + post.id}
-  class="group block rounded-default bg-secondary/40 shadow-soft border border-primary/5 transition-all duration-300 hover:shadow-soft-hover hover:-translate-y-1 overflow-hidden"
+  data-category={data.category}
+  class="blog-card group block rounded-default bg-secondary/40 shadow-soft border border-primary/5 transition-all duration-300 hover:shadow-soft-hover hover:-translate-y-1 overflow-hidden"
 >
   {showCover && (
     <div class="relative h-44 overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/30 to-accent-pink/20">
@@ -31,14 +33,11 @@ const hasCover = !!data.coverImage;
         </div>
       )}
       <span
-        class="absolute top-3 left-3 inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide shadow-soft bg-white/70 backdrop-blur-sm"
-        class:list={{
-          "text-accent-green": data.category === "前端",
-          "text-primary": data.category === "设计系统",
-          "text-accent-pink": data.category === "工程化",
-          "text-amber-700": data.category === "随笔",
-          "text-indigo-600": data.category === "开源",
-        }}
+        role="button"
+        tabindex="0"
+        data-category-badge={data.category}
+        class="category-badge absolute top-3 left-3 inline-block rounded-full px-3 py-0.5 text-xs font-medium tracking-wide shadow-soft bg-white/70 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform duration-200"
+        class:list={{ [getCategoryTextClass(data.category)]: true }}
       >
         {data.category}
       </span>

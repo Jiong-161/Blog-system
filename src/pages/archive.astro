@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { formatDateShort, groupByMonth, getCategories } from "../lib/utils";
+import { getCategoryClasses } from "../lib/category-config";
 
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
 const sortedPosts = allPosts.sort(
@@ -39,13 +40,7 @@ const filteredTimeline = activeCategory
     })()
   : timeline;
 
-const catColors = {
-  "\u524d\u7aef": "bg-accent-green/15 text-accent-green",
-  "\u8bbe\u8ba1\u7cfb\u7edf": "bg-primary/15 text-primary",
-  "\u5de5\u7a0b\u5316": "bg-accent-pink/15 text-accent-pink",
-  "\u968f\u7b14": "bg-amber-200/30 text-amber-700",
-  "\u5f00\u6e90": "bg-indigo-200/30 text-indigo-600",
-};
+	const getCatColor = (name: string) => getCategoryClasses(name);
 ---
 <Layout title="归档" description="按时间轴浏览所有文章">
   <div class="fixed inset-0 pointer-events-none z-0" style="background-image: linear-gradient(rgba(143,170,190,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(143,170,190,0.04) 1px, transparent 1px); background-size: 40px 40px;"></div>
@@ -196,7 +191,7 @@ const catColors = {
                               </div>
                               <div class="flex items-center gap-3 mt-1">
                                 <time class="text-xs text-text-sub/40 font-mono">{new Date(post.data.pubDate).getFullYear()}-{String(new Date(post.data.pubDate).getMonth() + 1).padStart(2, "0")}-{String(new Date(post.data.pubDate).getDate()).padStart(2, "0")}</time>
-                                <span class="inline-block rounded px-2 py-0.5 text-[11px] font-medium leading-tight" class:list={{ [catColors[post.data.category] || "bg-primary/10 text-primary"]: true }}>
+                                <span class="inline-block rounded px-2 py-0.5 text-[11px] font-medium leading-tight" class:list={{ [getCatColor(post.data.category) || "bg-primary/10 text-primary"]: true }}>
                                   {post.data.category}
                                 </span>
                               </div>

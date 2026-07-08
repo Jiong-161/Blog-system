@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { getCategories, getAllTags, formatDateShort } from "../lib/utils";
+import { getCategoryBarColor } from "../lib/category-config";
 
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
 const sortedPosts = allPosts.sort(
@@ -30,13 +31,6 @@ const RUNNING_YEARS = Math.floor(RUNNING_DAYS / 365);
 const RUNNING_REMAINDER = RUNNING_DAYS % 365;
 
 // ????
-const catColors: Record<string, string> = {
-  "前端": "var(--color-accent-green)",
-  "设计系统": "var(--color-primary)",
-  "工程化": "var(--color-accent-pink)",
-  "随笔": "#d97706",
-  "开源": "#6366f1",
-};
 const maxCatCount = Math.max(...categories.map((c) => c.count), 1);
 ---
 
@@ -118,7 +112,7 @@ const maxCatCount = Math.max(...categories.map((c) => c.count), 1);
                 class="h-full rounded-full transition-all duration-700 ease-out"
                 style={{
                   width: (cat.count / maxCatCount) * 100 + "%",
-                  backgroundColor: catColors[cat.name] || "var(--color-primary)",
+                  backgroundColor: getCategoryBarColor(cat.name) || "var(--color-primary)",
                   opacity: 0.6,
                 }}
               ></div>
